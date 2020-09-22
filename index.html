@@ -46,6 +46,11 @@
       href="https://fonts.googleapis.com/css?family=Open+Sans:400,400i,600&display=swap&subset=latin-ext"
       rel="stylesheet"
     />
+
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;1,500&display=swap"
+      rel="stylesheet"
+    />
   </head>
 
   <body>
@@ -242,7 +247,7 @@
 
     <!--====== ABOUT PART START ======-->
 
-    <section id="about" class="about-area pt-125 pb-130">
+    <section id="about" class="about-area pt-125">
       <div class="container">
         <div class="row justify-content-center">
           <div class="col-lg-8">
@@ -535,7 +540,7 @@
                 <h4 class="service-title">
                   <a href="#">Consultancy and Support</a>
                 </h4>
-                <p>I have got you covered.</p>
+                <p>Technical support and mentorship.</p>
               </div>
             </div>
             <!-- single service -->
@@ -559,17 +564,22 @@
         <div class="row justify-content-center">
           <div class="col-xl-8 col-lg-9">
             <div class="call-action-content text-center">
-              <h2 class="action-title">Have any project on mind?</h2>
-              <p>Get in touch lets talk about your idea</p>
+              <h2 class="action-title">what would you like to build ?</h2>
+              <p>
+                Have a sparking new idea? with the right skills and a unique
+                touch we can take that billion dollar idea off the ground.
+              </p>
               <ul>
                 <li>
                   <a
                     class="main-btn custom"
                     href="https://docs.google.com/document/d/1mIttsXfO8dkruy8SoULlTyXJ70loXfL0RIaK5JolOVQ/edit?usp=sharing"
-                    >download cv</a
+                    >View my CV</a
                   >
                 </li>
-                <li><a class="main-btn custom-2" href="#">Reach Out</a></li>
+                <li>
+                  <a class="main-btn custom-2" href="#">Reach Out to me</a>
+                </li>
               </ul>
             </div>
             <!-- call action content -->
@@ -791,23 +801,37 @@
 
     <!--====== BLOG PART START ======-->
 
-    <section id="blog" class="blog-area pt-125 pb-130">
+    <section id="blog" class="blog-area pb-130">
       <div class="container">
         <div class="row justify-content-center">
           <div class="col-lg-8">
             <div class="section-title text-center pb-25">
               <h2 class="title">From The Blog</h2>
-              <p>
-                Nunc id dui at sapien faucibus fermentum ut vel diam. Nullam
-                tempus, nunc id efficitur sagittis, urna est ultricies eros, ac
-                porta sem turpis quis leo.
-              </p>
+              <!-- <p>Some of my publications.</p> -->
             </div>
             <!-- section title -->
           </div>
         </div>
         <!-- row -->
-        <div class="row justify-content-center">
+
+        <div id="medium-widget"></div>
+        <script src="https://medium-widget.pixelpoint.io/widget.js"></script>
+        <script>
+          MediumWidget.Init({
+            renderTo: "#medium-widget",
+            params: {
+              resource:
+                "https://medium.com/@richardokonicha/understanding-python-your-baby-steps-a2949c17670e",
+              postsPerLine: 3,
+              limit: 4,
+              picture: "big",
+              fields: ["description", "author"],
+              ratio: "original",
+            },
+          });
+        </script>
+        <!--  -->
+        <!-- <div class="row justify-content-center">
           <div class="col-lg-4 col-md-8 col-sm-9">
             <div class="single-blog mt-30">
               <div class="blog-image">
@@ -820,7 +844,6 @@
                 <span>July 26, 2022</span>
               </div>
             </div>
-            <!-- single blog -->
           </div>
           <div class="col-lg-4 col-md-8 col-sm-9">
             <div class="single-blog mt-30">
@@ -834,7 +857,6 @@
                 <span>July 26, 2022</span>
               </div>
             </div>
-            <!-- single blog -->
           </div>
           <div class="col-lg-4 col-md-8 col-sm-9">
             <div class="single-blog mt-30">
@@ -848,14 +870,15 @@
                 <span>July 26, 2022</span>
               </div>
             </div>
-            <!-- single blog -->
           </div>
-        </div>
+        </div> -->
         <!-- row -->
         <div class="row">
           <div class="col-lg-12">
-            <div class="blog-more text-center mt-50">
-              <a class="main-btn" href="#">More posts</a>
+            <div class="blog-more text-center">
+              <a class="main-btn" href="https://medium.com/@richardokonicha"
+                >More posts</a
+              >
             </div>
             <!-- blog more -->
           </div>
@@ -869,11 +892,11 @@
 
     <!--====== CONTACT PART START ======-->
 
-    <section id="contact" class="contact-area pt-125 pb-130 gray-bg">
+    <section id="contact" class="contact-area pb-130 gray-bg">
       <div class="container">
         <div class="row justify-content-center">
           <div class="col-lg-8">
-            <div class="section-title text-center pb-25">
+            <div class="section-title text-center">
               <h2 class="title">Get In Touch</h2>
               <!-- <p>
                 Nunc id dui at sapien faucibus fermentum ut vel diam. Nullam
@@ -882,6 +905,40 @@
               </p> -->
             </div>
             <!-- section title -->
+          </div>
+        </div>
+        <!-- row -->
+        <div class="row">
+          <div class="col-lg-12">
+            <div class="contact-form">
+              <div
+                class="typeform-widget"
+                data-url="https://form.typeform.com/to/PTBjIXKF"
+                style="width: 100%; height: 500px"
+              ></div>
+              <script>
+                (function () {
+                  var qs,
+                    js,
+                    q,
+                    s,
+                    d = document,
+                    gi = d.getElementById,
+                    ce = d.createElement,
+                    gt = d.getElementsByTagName,
+                    id = "typef_orm",
+                    b = "https://embed.typeform.com/";
+                  if (!gi.call(d, id)) {
+                    js = ce.call(d, "script");
+                    js.id = id;
+                    js.src = b + "embed.js";
+                    q = gt.call(d, "script")[0];
+                    q.parentNode.insertBefore(js, q);
+                  }
+                })();
+              </script>
+            </div>
+            <!-- contact form -->
           </div>
         </div>
         <!-- row -->
@@ -924,47 +981,6 @@
           </div>
         </div>
         <!-- row -->
-        <div class="row">
-          <div class="col-lg-6">
-            <div class="contact-form pt-30">
-              <form id="contact-form" action="assets/contact.php">
-                <div class="single-form">
-                  <input type="text" name="name" placeholder="Name" />
-                </div>
-                <!-- single form -->
-                <div class="single-form">
-                  <input type="email" name="email" placeholder="Email" />
-                </div>
-                <!-- single form -->
-                <div class="single-form">
-                  <textarea name="message" placeholder="Message"></textarea>
-                </div>
-                <!-- single form -->
-                <p class="form-message"></p>
-                <div class="single-form">
-                  <button class="main-btn" type="submit">Send Message</button>
-                </div>
-                <!-- single form -->
-              </form>
-            </div>
-            <!-- contact form -->
-          </div>
-          <div class="col-lg-6">
-            <div class="contact-map mt-60">
-              <div class="gmap_canvas">
-                <iframe
-                  id="gmap_canvas"
-                  src="https://maps.google.com/maps?q=Mission%20District%2C%20San%20Francisco%2C%20CA%2C%20USA&t=&z=13&ie=UTF8&iwloc=&output=embed"
-                  frameborder="0"
-                  scrolling="no"
-                  marginheight="0"
-                  marginwidth="0"
-                ></iframe>
-              </div>
-            </div>
-            <!-- contact map -->
-          </div>
-        </div>
         <!-- row -->
       </div>
       <!-- container -->
