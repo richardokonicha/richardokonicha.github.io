@@ -1156,7 +1156,7 @@ p {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(117, 78, 249, 0.7);
+  background-color: #4d332db3;
   z-index: -1;
 }
 
@@ -1235,7 +1235,8 @@ p {
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(117, 78, 249, 0.8);
+  background-color: hsl(11, 26%, 24%);
+
   opacity: 0;
   visibility: hidden;
   -webkit-transition: all 0.3s ease-out 0s;
