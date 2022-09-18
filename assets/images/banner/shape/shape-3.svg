@@ -1,7 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="195.976" height="164.755" viewBox="0 0 195.976 164.755">
-  <g id="shape3" transform="translate(-984.696 -173.549)">
-    <rect id="Rectangle_1" data-name="Rectangle 1" width="160" height="24" rx="12" transform="translate(1058.105 173.549) rotate(40)" fill="rgba(78,52,46,0.09)"/>
-    <path id="Path_8" data-name="Path 8" d="M10,0H118a10,10,0,0,1,0,20H10A10,10,0,0,1,10,0Z" transform="translate(1077.467 240.707) rotate(40)" fill="rgba(0,0,0,0.05)"/>
-    <rect id="Rectangle_3" data-name="Rectangle 3" width="96" height="16" rx="8" transform="translate(994.981 174.103) rotate(40)" fill="rgba(78,52,46,0.10)"/>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="195.976" height="164.755" viewBox="0 0 195.976 164.755"><g id="shape3" transform="translate(-984.696 -173.549)"><rect id="Rectangle_1" width="160" height="24" fill="rgba(78,52,46,0.09)" data-name="Rectangle 1" rx="12" transform="translate(1058.105 173.549) rotate(40)"/><path id="Path_8" fill="rgba(0,0,0,0.05)" d="M10,0H118a10,10,0,0,1,0,20H10A10,10,0,0,1,10,0Z" data-name="Path 8" transform="translate(1077.467 240.707) rotate(40)"/><rect id="Rectangle_3" width="96" height="16" fill="rgba(78,52,46,0.10)" data-name="Rectangle 3" rx="8" transform="translate(994.981 174.103) rotate(40)"/></g></svg>

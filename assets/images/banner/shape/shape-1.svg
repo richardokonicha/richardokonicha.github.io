@@ -1,14 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="97.211" height="140.123" viewBox="0 0 97.211 140.123">
-  <g id="Group_1" data-name="Group 1" transform="matrix(0.391, 0.921, -0.921, 0.391, 298.479, -894.772)">
-    <g id="Path_7" data-name="Path 7" transform="translate(725 582)" fill="#fff">
-      <path d="M 128.0419311523438 49 L 2.958065032958984 49 L 65.5 1.258064985275269 L 128.0419311523438 49 Z" stroke="none"/>
-      <path d="M 65.5 2.516117095947266 L 5.916114807128906 48 L 125.0838851928711 48 L 65.5 2.516117095947266 M 65.5 0 L 131 50 L 0 50 L 65.5 0 Z" stroke="none" fill="#e3e3e3"/>
-    </g>
-    <path id="Path_1" data-name="Path 1" d="M0,0H103" transform="translate(738.5 621.5)" fill="none" stroke="rgba(78,52,46,0.5)" stroke-width="2"/>
-    <path id="Path_2" data-name="Path 2" d="M0,0H103" transform="translate(739.5 616.5)" fill="none" stroke="rgba(78,52,46,0.5)" stroke-width="2"/>
-    <path id="Path_3" data-name="Path 3" d="M0,0H103" transform="translate(739.5 611.5)" fill="none" stroke="rgba(78,52,46,0.5)" stroke-width="2"/>
-    <path id="Path_4" data-name="Path 4" d="M0,0H103" transform="translate(739.5 606.5)" fill="none" stroke="rgba(78,52,46,0.5)" stroke-width="2"/>
-    <path id="Path_5" data-name="Path 5" d="M0,0H103" transform="translate(739.5 601.5)" fill="none" stroke="rgba(78,52,46,0.5)" stroke-width="2"/>
-    <path id="Path_6" data-name="Path 6" d="M0,0H103" transform="translate(739.5 596.5)" fill="none" stroke="rgba(78,52,46,0.5)" stroke-width="2"/>
-  </g>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="97.211" height="140.123" viewBox="0 0 97.211 140.123"><g id="Group_1" data-name="Group 1" transform="matrix(0.391, 0.921, -0.921, 0.391, 298.479, -894.772)"><g id="Path_7" fill="#fff" data-name="Path 7"><path stroke="none" d="M 128.0419311523438 49 L 2.958065032958984 49 L 65.5 1.258064985275269 L 128.0419311523438 49 Z" transform="translate(725 582)"/><path fill="#e3e3e3" stroke="none" d="M 65.5 2.516117095947266 L 5.916114807128906 48 L 125.0838851928711 48 L 65.5 2.516117095947266 M 65.5 0 L 131 50 L 0 50 L 65.5 0 Z" transform="translate(725 582)"/></g><path id="Path_1" fill="none" stroke="rgba(78,52,46,0.5)" stroke-width="2" d="M0,0H103" data-name="Path 1" transform="translate(738.5 621.5)"/><path id="Path_2" fill="none" stroke="rgba(78,52,46,0.5)" stroke-width="2" d="M0,0H103" data-name="Path 2" transform="translate(739.5 616.5)"/><path id="Path_3" fill="none" stroke="rgba(78,52,46,0.5)" stroke-width="2" d="M0,0H103" data-name="Path 3" transform="translate(739.5 611.5)"/><path id="Path_4" fill="none" stroke="rgba(78,52,46,0.5)" stroke-width="2" d="M0,0H103" data-name="Path 4" transform="translate(739.5 606.5)"/><path id="Path_5" fill="none" stroke="rgba(78,52,46,0.5)" stroke-width="2" d="M0,0H103" data-name="Path 5" transform="translate(739.5 601.5)"/><path id="Path_6" fill="none" stroke="rgba(78,52,46,0.5)" stroke-width="2" d="M0,0H103" data-name="Path 6" transform="translate(739.5 596.5)"/></g></svg>
