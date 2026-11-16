@@ -138,6 +138,9 @@
   html {
     scroll-behavior: smooth;
     -webkit-text-size-adjust: 100%;
+    /* the root canvas, so a stored dark theme paints dark before the body
+       element is even parsed — no white flash on reload */
+    background: var(--color-paper);
   }
 
   body {
