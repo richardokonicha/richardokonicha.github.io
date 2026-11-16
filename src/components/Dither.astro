@@ -1,0 +1,81 @@
+---
+type DitherSize = "xs" | "sm" | "md" | "lg" | "xl" | "2xl";
+
+interface Props {
+  src: string;
+  alt: string;
+  width?: number;
+  height?: number;
+  /** ordered-dither cell size */
+  size?: DitherSize;
+  grayscale?: number;
+  contrast?: number;
+  brightness?: number;
+  blur?: number;
+  /** dot-screen opacity */
+  opacity?: number;
+  /** dot-screen opacity on hover */
+  hover?: number;
+  eager?: boolean;
+  class?: string;
+}
+
+const {
+  src,
+  alt,
+  width,
+  height,
+  size = "md",
+  grayscale = 1,
+  contrast = 120,
+  brightness = 1,
+  blur = 0,
+  opacity = 1,
+  hover = 0.34,
+  eager = false,
+  class: className,
+} = Astro.props;
+
+/* literal class names so Tailwind can see them */
+const sizeClass: Record<DitherSize, string> = {
+  xs: "dither-xs",
+  sm: "dither-sm",
+  md: "dither-md",
+  lg: "dither-lg",
+  xl: "dither-xl",
+  "2xl": "dither-2xl",
+};
+
+const style = {
+  "--dither-gray": String(grayscale),
+  /* percentage, not a bare multiplier: `contrast(132)` would mean 13,200%
+     and hard-threshold the image to pure black/white */
+  "--dither-contrast": `${contrast}%`,
+  "--dither-bright": String(brightness),
+  "--dither-blur": `${blur}px`,
+  "--dither-opacity": String(opacity),
+  "--dither-hover": String(hover),
+};
+---
+
+<div
+  data-dither=""
+  class:list={[
+    "relative isolate aspect-square overflow-hidden bg-black",
+    "after:pointer-events-none after:absolute after:inset-0 after:z-[1] after:transition-opacity after:duration-[550ms]",
+    "hover:after:opacity-(--dither-hover)",
+    sizeClass[size],
+    className,
+  ]}
+  style={style}
+>
+  <img
+    src={src}
+    alt={alt}
+    width={width}
+    height={height}
+    loading={eager ? "eager" : "lazy"}
+    decoding="async"
+    class="h-full w-full object-cover"
+  />
+</div>

@@ -1,0 +1,24 @@
+{
+  "name": "richardokonicha-github-io",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Portfolio of Richard Okonicha — engineer and writer",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@tailwindcss/vite": "4.3.5",
+    "astro": "7.4.12",
+    "dither-plugin": "^1.1.1",
+    "tailwindcss": "4.3.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.12",
+    "typescript": "5.9.3"
+  }
+}

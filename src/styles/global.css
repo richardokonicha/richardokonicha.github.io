@@ -1,0 +1,159 @@
+@import "tailwindcss";
+/* ordered (Bayer) dither surface: `dither`, `dither-xs` … `dither-2xl` */
+@import "dither-plugin";
+
+/* ------------------------------------------------------------------ *
+ * Design tokens
+ * ------------------------------------------------------------------ */
+
+@theme {
+  /* paper + ink */
+  --color-paper: #f4f0e6;
+  --color-paper-2: #eae2d1;
+  --color-ink: #14110e;
+  --color-ink-soft: #2a241d;
+  --color-muted: #6b6257;
+  --color-rule: #d5cbb8;
+  --color-accent: #9c3d1a;
+
+  /* dark sections */
+  --color-dark: #12100d;
+  --color-dark-2: #1a1713;
+  --color-dark-muted: #a79d8e;
+  --color-dark-rule: #332d25;
+  --color-ember: #d06a3f;
+
+  /* type */
+  --font-serif: "Instrument Serif", "Iowan Old Style", "Palatino Linotype", Palatino,
+    Georgia, serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  --font-mono: "Fira Code", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
+
+  /* layout */
+  --spacing-page-pad: clamp(1.25rem, 4vw, 4rem);
+  --spacing-nav: 4rem;
+  --container-page: 1200px;
+
+  /* breakpoints beyond the default scale — kept in rem so Tailwind's
+     breakpoint sort matches the built-in sm/md/lg/xl scale (px vs rem
+     cannot be compared, which silently reorders the media queries) */
+  --breakpoint-xs: 32.5rem; /* 520px */
+  --breakpoint-tb: 53.75rem; /* 860px */
+
+  /* motion */
+  --ease-silk: cubic-bezier(0.16, 0.84, 0.24, 1);
+  --animate-dot: dot 2.8s infinite;
+
+  @keyframes dot {
+    0% {
+      box-shadow: 0 0 0 0 rgb(156 61 26 / 45%);
+    }
+    70% {
+      box-shadow: 0 0 0 7px rgb(156 61 26 / 0%);
+    }
+    100% {
+      box-shadow: 0 0 0 0 rgb(156 61 26 / 0%);
+    }
+  }
+}
+
+/* JS is assumed until proven otherwise: reveal states only apply once the
+   document element carries `.js`, so no-JS visitors see the plain page. */
+@custom-variant js (&:where(.js, .js *));
+
+/* ------------------------------------------------------------------ *
+ * Base
+ * ------------------------------------------------------------------ */
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: var(--color-ink);
+    color: var(--color-paper);
+  }
+
+  /* range inputs (player seek + volume) */
+  input[type="range"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    height: 16px;
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  input[type="range"]::-webkit-slider-runnable-track {
+    height: 2px;
+    background: var(--color-rule);
+  }
+
+  input[type="range"]::-moz-range-track {
+    height: 2px;
+    background: var(--color-rule);
+  }
+
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 10px;
+    height: 10px;
+    margin-top: -4px;
+    border-radius: 50%;
+    background: var(--color-ink);
+    border: 2px solid var(--color-paper);
+  }
+
+  input[type="range"]::-moz-range-thumb {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--color-ink);
+    border: 2px solid var(--color-paper);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Composite pieces that are single cohesive ideas, not page styling:
+ * the page gutter and the Pretext line mask. The Bayer dither surface
+ * comes from `dither-plugin`. Everything else is a plain utility class.
+ * ------------------------------------------------------------------ */
+
+@utility wrap {
+  width: min(var(--container-page), calc(100% - 2 * var(--spacing-page-pad)));
+  margin-inline: auto;
+}
+
+@utility line-mask {
+  display: block;
+  overflow: hidden;
+  padding-bottom: 0.14em;
+  margin-bottom: -0.14em;
+}
+
+@utility line {
+  display: block;
+  white-space: pre;
+  transform: translateY(112%);
+  will-change: transform;
+}
