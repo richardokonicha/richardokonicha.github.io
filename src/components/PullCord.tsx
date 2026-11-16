@@ -217,6 +217,7 @@ export default function PullCord() {
       after(1.1, () => {
         ghost = false;
       });
+      wake();
     };
 
     const local = (e: PointerEvent) => {
@@ -240,13 +241,14 @@ export default function PullCord() {
       };
       ghost = false;
       armed = true;
-      userUntil = clock + 7;
+      userUntil = performance.now() + 7000;
       try {
         grab.setPointerCapture(e.pointerId);
       } catch {
         /* capture is a nicety */
       }
       grab.classList.add("cursor-grabbing");
+      wake();
     };
 
     const onMove = (e: PointerEvent) => {
@@ -255,7 +257,8 @@ export default function PullCord() {
       held.x = x + held.ox;
       held.y = y + held.oy;
       held.moved = Math.max(held.moved, Math.hypot(x - held.sx, y - held.sy));
-      userUntil = clock + 7;
+      userUntil = performance.now() + 7000;
+      wake();
     };
 
     const onUp = (e: PointerEvent) => {
@@ -264,14 +267,26 @@ export default function PullCord() {
       held = null;
       grab.classList.remove("cursor-grabbing");
       if (tap) pull(false);
+      else wake();
     };
 
     /* keyboard and screen-reader activation arrive with detail === 0 */
     const onClick = (e: MouseEvent) => {
       if (e.detail) return;
-      userUntil = clock + 7;
+      userUntil = performance.now() + 7000;
       flip();
+      wake();
     };
+
+    const onResize = () => {
+      measure();
+      wake();
+    };
+    const onVisible = () => {
+      if (!document.hidden) wake();
+    };
+    window.addEventListener("resize", onResize);
+    document.addEventListener("visibilitychange", onVisible);
 
     grab.addEventListener("pointerdown", onDown);
     grab.addEventListener("pointermove", onMove);
@@ -280,17 +295,37 @@ export default function PullCord() {
     grab.addEventListener("click", onClick);
 
     /* It tugs at itself now and then, so the invitation is not a mystery.
-       Never a theme change — see `pull(demo)`. */
-    const IDLE_EVERY = 11;
-    const auto = () => {
-      if (!still && clock >= userUntil && !held && !ghost) pull(true);
-      after(IDLE_EVERY, auto);
+       Never a theme change — see `pull(demo)`. This runs on wall time, not sim
+       time, because the loop sleeps once the rope has settled. */
+    const IDLE_MS = 11_000;
+    let idleTimer = 0;
+    const scheduleIdle = () => {
+      idleTimer = window.setTimeout(() => {
+        if (!still && performance.now() >= userUntil && !held && !ghost) {
+          pull(true);
+          wake();
+        }
+        scheduleIdle();
+      }, IDLE_MS);
     };
-    after(IDLE_EVERY, auto);
+    scheduleIdle();
 
-    /* ---- the loop ---- */
+    /* ---- the loop ----
+       The rope always ends up hanging still, so the loop sleeps once nothing is
+       moving. Any input, the idle timer, or a resize wakes it again. */
     let raf = 0;
-    let last = performance.now();
+    let last = 0;
+
+    const settled = () => {
+      if (held || ghost || timers.length > 0) return false;
+      for (const s of [TH, TUG, R, BP, HX, HY, K]) {
+        if (Math.abs(s.v) > 0.02 || Math.abs(s.x - s.t) > 0.02) return false;
+      }
+      for (let i = 1; i <= N; i++) {
+        if (Math.abs(pts[i].vx) > 0.6 || Math.abs(pts[i].vy) > 0.6) return false;
+      }
+      return true;
+    };
 
     const frame = (dt: number) => {
       clock += dt;
@@ -441,8 +476,17 @@ export default function PullCord() {
       const sub = 4;
       for (let k = 0; k < sub; k++) frame(dt / sub);
       render();
-      raf = requestAnimationFrame(loop);
+      raf = settled() ? 0 : requestAnimationFrame(loop);
     };
+
+    function wake() {
+      render();
+      if (raf === 0 && !document.hidden) {
+        last = 0;
+        raf = requestAnimationFrame(loop);
+      }
+    }
+
     // Paint once before the first frame, so the room matches the stored theme
     // immediately instead of one frame later.
     render();
@@ -450,6 +494,9 @@ export default function PullCord() {
 
     return () => {
       cancelAnimationFrame(raf);
+      window.clearTimeout(idleTimer);
+      window.removeEventListener("resize", onResize);
+      document.removeEventListener("visibilitychange", onVisible);
       grab.removeEventListener("pointerdown", onDown);
       grab.removeEventListener("pointermove", onMove);
       grab.removeEventListener("pointerup", onUp);
