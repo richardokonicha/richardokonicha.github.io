@@ -1,13 +1,22 @@
 # dependencies
 node_modules/
 
-# build output
+# next
+.next/
+out/
+next-env.d.ts
+
+# build output from the previous astro setup
 dist/
 .astro/
 
 # local env
 .env
+.env.local
 .env.production
 
 # os
 .DS_Store
+
+# typescript
+*.tsbuildinfo

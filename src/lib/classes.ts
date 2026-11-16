@@ -9,3 +9,8 @@ export const reveal =
 
 /** Section shell: generous vertical rhythm plus nav-aware scroll offset. */
 export const section = "scroll-mt-20 py-[clamp(4.5rem,12vh,9rem)]";
+
+/** Joins conditional class fragments, dropping the falsy ones. */
+export function cx(...parts: (string | false | null | undefined)[]): string {
+  return parts.filter(Boolean).join(" ");
+}
