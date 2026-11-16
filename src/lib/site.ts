@@ -218,6 +218,8 @@ export interface Track {
   title: string;
   artist: string;
   artwork: string;
+  /** Length in seconds; the audio element corrects this once metadata loads. */
+  duration: number;
 }
 
 export const tracks: Track[] = [
@@ -226,11 +228,13 @@ export const tracks: Track[] = [
     title: "Loop 001 — Paper",
     artist: "Original demo audio",
     artwork: "/img/player-art.svg",
+    duration: 48,
   },
   {
     src: "/audio/lofi-002.mp3",
     title: "Loop 002 — Dust",
     artist: "Original demo audio",
     artwork: "/img/player-art.svg",
+    duration: 48,
   },
 ];

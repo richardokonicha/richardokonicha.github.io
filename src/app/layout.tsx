@@ -3,6 +3,7 @@ import { Fira_Code, Instrument_Serif, Inter } from "next/font/google";
 
 import Nav from "@/components/Nav";
 import Player from "@/components/Player";
+import PullCord from "@/components/PullCord";
 import SiteBehaviour from "@/components/SiteBehaviour";
 import SiteFooter from "@/components/SiteFooter";
 import { site } from "@/lib/site";
@@ -59,14 +60,16 @@ export default function RootLayout({
       className={`${serif.variable} ${sans.variable} ${mono.variable} no-js`}
       suppressHydrationWarning
     >
-      <body className="bg-paper font-sans text-ink antialiased max-md:pb-20">
-        {/* Flips the document to `.js` before anything paints, so the reveal
-            styles only apply when scripting is actually available. */}
+      <body className="bg-paper font-sans text-ink antialiased max-md:pb-[14rem]">
+        {/* Flips the document to `.js` before anything paints, so the reveal styles
+            only apply when scripting is actually available, and restores the
+            stored theme before the first frame so a dark-mode visitor never
+            sees a white flash. */}
         <script
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
             __html:
-              "document.documentElement.classList.remove('no-js');document.documentElement.classList.add('js');",
+              "(function(){var d=document.documentElement;d.classList.remove('no-js');d.classList.add('js');try{var t=localStorage.getItem('ro-theme');if(t==='dark')d.setAttribute('data-theme','dark');}catch(e){}})();",
           }}
         />
 
@@ -82,8 +85,9 @@ export default function RootLayout({
         <main id="main">{children}</main>
 
         <SiteFooter />
+        <PullCord />
         <Player />
-        <audio id="audio" preload="none" />
+        <audio id="audio" preload="metadata" />
         <SiteBehaviour />
       </body>
     </html>

@@ -3,9 +3,10 @@
 A personal site — a log of things built, studied and noticed, with a résumé
 kept on its own page.
 
-Next.js (App Router, statically exported) + Tailwind CSS v4 + TypeScript. No UI
-kit and no component library: semantic markup, hand-written utility classes, and
-one small client component that holds all of the progressive enhancement.
+Next.js (App Router, statically exported) + Tailwind CSS v4 + TypeScript. Two
+shadcn/ui primitives (`Button`, `Card`) rebuilt on this project's tokens, and
+hand-written utility classes everywhere else. Three small client components hold
+all of the behaviour: the page enhancements, the pull cord and the player.
 
 ## Develop
 
@@ -41,27 +42,29 @@ src/
     globals.css     Tailwind v4 entry: @theme tokens, @layer base, @utility
     page.tsx        the log
     cv/page.tsx     the résumé
-  components/       Cover, Stream, Plates, Colophon, Nav, SiteFooter, Player,
-                    Dither, SiteBehaviour
+  components/       Cover, Stream, Plates, Colophon, Nav, SiteFooter, Dither,
+                    PullCord, Player, SiteBehaviour
+    ui/             button.tsx, card.tsx — shadcn primitives on project tokens
   scripts/          plain-DOM progressive enhancement
     behaviour.ts    nav state, reveal-on-scroll, section spy, boots the rest
     pretext.ts      line breaking for display type
     field.ts        generative particle field
-    player.ts       lo-fi player
     qa.ts           opt-in layout audit (?qa=1)
-  lib/              site.ts (all content), classes.ts (class strings)
+  lib/              site.ts (all content), classes.ts (class strings),
+                    spring.ts (the shared spring integrator), utils.ts (cn)
   vendor/           vendored Pretext build + hand-written .d.mts
 public/
   img/  audio/
 ```
 
-### Why there is only one client component
+### Why there are only three client components
 
-Every component except `SiteBehaviour` is a server component. All the
-interactivity is written as plain DOM scripts against `data-*` attributes, so it
-lives in one `"use client"` component that imports them inside `useEffect`.
-Importing them at module scope would evaluate them during the static export,
-where `document` does not exist.
+Every other component is a server component. `SiteBehaviour` holds the
+progressive enhancement, written as plain DOM scripts against `data-*` attributes
+and imported inside `useEffect` — importing them at module scope would evaluate
+them during the static export, where `document` does not exist. `PullCord` and
+`Player` are the two pieces that are genuinely interactive: each is a ref, a
+`requestAnimationFrame` loop and some pointer handlers.
 
 The trade-off is deliberate: React hydrates the page, but the markup you read in
 `src/components` is the markup that ships.
@@ -113,8 +116,19 @@ gets a title and a sentence, the résumé gets the rest.
 - **Motion** — reveal-on-scroll is opt-in on `.js` (see the `js` custom variant),
   so content is visible with scripting disabled. Everything collapses under
   `prefers-reduced-motion`.
-- **Player** — no autoplay, never unmuted without a gesture, volume persisted in
-  `localStorage`.
+- **Pull cord** — the theme switch is a lamp on a wire in the top-right corner.
+  The cord is a chain of twelve weighted points, so it hangs, swings and whips;
+  pull past the click and the light floods the little room and the page follows.
+  It gives the occasional unheld tug to show it can be pulled, but that tug
+  always stops short of the click: **only a real pull — pointer, touch or
+  keyboard — ever changes the theme.**
+- **Player** — a record deck in the lower-left corner. No autoplay: the disc
+  only turns at 33⅓ once you press play. Spin the record to scrub, drag the card
+  anywhere (the position is remembered), mute from the header. The engine is
+  ported from Kokonut UI's `liquid-glass-card` (MIT), with the simulated clock
+  replaced by the real `<audio>` element.
+- **Corners** — everything is square with 1px rules, the player included. The
+  one round thing on the site is the record itself.
 
 ### Placeholder audio
 
@@ -139,6 +153,7 @@ Range requests. `python3 -m http.server` does not, so the seek bar will appear
 dead when testing that way; GitHub Pages and any Node static server do.
 
 Verified at 1440, 1280, 768 and 390 px wide, in Chrome with and without
-`prefers-reduced-motion`: no horizontal overflow, no console errors, Pretext
-splitting all three targets, and the player seeking, switching tracks, and
-expanding on every viewport.
+`prefers-reduced-motion`, in both themes: no horizontal overflow, no console
+errors, every reveal firing, the cord's idle tug leaving the theme alone, the
+player playing, seeking, scrubbing and switching tracks, and the nav opening and
+closing on a phone.
