@@ -78,8 +78,13 @@ if ("IntersectionObserver" in window && !reducedMotion) {
   });
 }
 
+/* Only in-page anchors can be observed. The résumé link is a real route
+   (/cv/), and querySelector would throw on it and take the rest of this
+   module down with it. */
 const sections = links
-  .map((link) => document.querySelector<HTMLElement>(link.getAttribute("href")!))
+  .map((link) => link.getAttribute("href") ?? "")
+  .filter((href) => href.startsWith("#") && href.length > 1)
+  .map((href) => document.querySelector<HTMLElement>(href))
   .filter((section): section is HTMLElement => Boolean(section));
 
 if ("IntersectionObserver" in window && sections.length) {
