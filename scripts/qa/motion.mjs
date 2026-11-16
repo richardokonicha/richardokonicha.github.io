@@ -106,20 +106,25 @@ async function sleepSuite(t) {
 
     /* The cover's field is the other rAF loop: it must wake for the pointer,
        then sleep again on its own — no animation of its own. This runs last,
-       because a sweep across the cover also drags the cord. */
+       because a sweep across the cover also drags the cord.
+       It asserts on the field's own flag, not on the global rAF count: the
+       pull cord tugs itself every 11s, which has nothing to do with the field. */
     for (let i = 0; i < 10; i += 1) {
       await h.mouse("mouseMoved", { x: 260 + i * 34, y: 470 + i * 10 }, 1);
       await sleep(40);
     }
-    const d1 = await h.ev("window.__raf");
-    check("a pointer sweep wakes the field", d1 - c4 > 0, `${d1 - c4} callbacks`);
-    /* the wake is bounded: 16 units of budget, spent one per frame, with a
-       380ms ceiling on the tail */
-    await sleep(2400);
-    const d2 = await h.ev("window.__raf");
-    await sleep(1600);
-    const d3 = await h.ev("window.__raf");
-    check("the field sleeps once the wake has faded", d3 - d2 === 0, `${d3 - d2} callbacks`);
+    const awake1 = await h.ev(
+      `document.getElementById('field')?.dataset.awake === '1'`,
+    );
+    check("a pointer sweep wakes the field", awake1);
+
+    /* the wake is bounded: nine frames of walking, then a cloud that fades
+       over four seconds. Both end on their own. */
+    await sleep(7600);
+    const awake2 = await h.ev(
+      `document.getElementById('field')?.dataset.awake !== '1'`,
+    );
+    check("the field sleeps once the wake has faded", awake2);
   } finally {
     await h.close();
   }

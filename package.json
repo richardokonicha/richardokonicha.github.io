@@ -3,11 +3,11 @@
   "version": "2.0.0",
   "private": true,
   "type": "module",
-  "description": "Portfolio and sketchbook of Richard Okonicha — engineer and writer",
+  "description": "Portfolio and sketchbook of Richard Okonicha \u2014 engineer and writer",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "node init && next dev",
+    "build": "node init && next build",
+    "start": "node init && next start",
     "typecheck": "tsc --noEmit",
     "og": "node scripts/og.mjs",
     "qa": "node scripts/qa/run.mjs"
