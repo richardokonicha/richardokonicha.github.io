@@ -2,8 +2,7 @@ export const site = {
   name: "Richard Okonicha",
   title: "Richard Okonicha — Engineer & Writer",
   description:
-    "Richard Okonicha is a software engineer and systems architect in Lagos. AI infrastructure, distributed systems, photography, typography, and the occasional generative sketch.",
-  location: "Lagos, Nigeria",
+    "Richard Okonicha is a software engineer and systems architect. AI infrastructure, distributed systems, photography, typography, and the occasional generative sketch.",
   email: "richardokonicha@gmail.com",
   year: 2026,
 };
@@ -30,7 +29,7 @@ export const projects: Project[] = [
     name: "Fugoku Cloud",
     role: "Founder & Architect",
     summary:
-      "Sovereign AI cloud on bare-metal OpenStack: GPU/TPU compute fabric, tenant isolation, and an LLM gateway that cut inference latency from 300ms+ in Europe to under 50ms in Lagos.",
+      "Sovereign AI cloud on bare-metal OpenStack: GPU/TPU compute fabric, tenant isolation, and an LLM gateway that cut inference latency from 300ms+ in Europe to under 50ms in-region.",
     stack: "OpenStack · K3s · Python · Go · Terraform",
   },
   {
@@ -108,7 +107,6 @@ export const timeline: TimelineEntry[] = [
 ];
 
 export const facts = [
-  { term: "Based in", detail: "Lagos, Nigeria" },
   {
     term: "Focus",
     detail: "AI infrastructure, distributed systems, developer platforms",

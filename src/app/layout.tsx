@@ -42,20 +42,11 @@ export const metadata: Metadata = {
     title: site.title,
     description: site.description,
     siteName: site.name,
-    images: [
-      {
-        url: "/img/portrait.jpg",
-        width: 760,
-        height: 760,
-        alt: "Richard Okonicha",
-      },
-    ],
   },
   twitter: {
     card: "summary_large_image",
     title: site.title,
     description: site.description,
-    images: ["/img/portrait.jpg"],
   },
 };
 

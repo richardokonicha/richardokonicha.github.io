@@ -1,4 +1,3 @@
-import Dither from "@/components/Dither";
 import SectionHead from "@/components/SectionHead";
 import { cx, reveal, section } from "@/lib/classes";
 import { facts, timeline } from "@/lib/site";
@@ -6,27 +5,8 @@ import { facts, timeline } from "@/lib/site";
 export default function About() {
   return (
     <section id="about" className={cx(section, "scroll-mt-20")}>
-      <div className="wrap grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] items-start gap-[clamp(2rem,6vw,6rem)] max-tb:grid-cols-1 max-tb:gap-[3rem]">
-        <div className="sticky top-[calc(var(--spacing-nav)_+_2rem)] max-tb:static max-tb:max-w-[320px]">
-          <div className={reveal}>
-            <Dither
-              src="/img/portrait.jpg"
-              alt="Portrait of Richard Okonicha"
-              width={760}
-              height={760}
-              size="md"
-              contrast={140}
-              opacity={0.5}
-              hover={0.28}
-              className="w-full max-w-[360px]"
-            />
-            <p className="mt-[0.7rem] font-mono text-[0.62rem] tracking-[0.08em] text-muted uppercase">
-              Lagos, Nigeria · 6°27′N 3°23′E
-            </p>
-          </div>
-        </div>
-
-        <div className="max-tb:max-w-[640px]">
+      <div className="wrap">
+        <div className="max-w-[68ch]">
           <SectionHead no="04" title="About" className="mb-[2rem]" />
 
           <p
