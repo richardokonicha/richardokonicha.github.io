@@ -1,6 +1,7 @@
 # richardokonicha.github.io
 
-Portfolio and sketchbook of Richard Okonicha — engineer and writer.
+A personal site — a log of things built, studied and noticed, with a résumé
+kept on its own page.
 
 Next.js (App Router, statically exported) + Tailwind CSS v4 + TypeScript. No UI
 kit and no component library: semantic markup, hand-written utility classes, and
@@ -15,7 +16,6 @@ npm run dev        # http://localhost:3000
 
 ```sh
 npm run build      # static export -> out/
-npm run start      # serve the export locally (not needed day to day)
 ```
 
 ## Deploy
@@ -30,7 +30,7 @@ is published.
 
 `next.config.mjs` sets `output: "export"` and `trailingSlash: true`. The trailing
 slash is not cosmetic: Pages only resolves a directory to its `index.html`, so
-without it every route except `/` would 404.
+without it `/cv/` would 404.
 
 ## Structure
 
@@ -39,16 +39,17 @@ src/
   app/
     layout.tsx      document shell, fonts, metadata, scripts
     globals.css     Tailwind v4 entry: @theme tokens, @layer base, @utility
-    page.tsx        composes the sections
-  components/       Nav, Hero, Work, Experiments, Notes, About, Contact,
-                    SiteFooter, Player, Dither, SectionHead, SiteBehaviour
+    page.tsx        the log
+    cv/page.tsx     the résumé
+  components/       Cover, Stream, Plates, Colophon, Nav, SiteFooter, Player,
+                    Dither, SiteBehaviour
   scripts/          plain-DOM progressive enhancement
     behaviour.ts    nav state, reveal-on-scroll, section spy, boots the rest
     pretext.ts      line breaking for display type
     field.ts        generative particle field
     player.ts       lo-fi player
     qa.ts           opt-in layout audit (?qa=1)
-  lib/              site.ts (all editable content), classes.ts (class strings)
+  lib/              site.ts (all content), classes.ts (class strings)
   vendor/           vendored Pretext build + hand-written .d.mts
 public/
   img/  audio/
@@ -65,15 +66,33 @@ where `document` does not exist.
 The trade-off is deliberate: React hydrates the page, but the markup you read in
 `src/components` is the markup that ships.
 
-### Editing content
+## Adding things
 
-Almost everything visible lives in `src/lib/site.ts`:
+Almost everything lives in `src/lib/site.ts`.
 
-- `projects` — selected work. `year`, `name`, `role`, `summary`, `stack`.
-- `notes` — writing. Omit `href` and the row renders as non-interactive.
-- `timeline` — the compact career rail in About.
-- `facts` — the definition list under the timeline.
-- `tracks` — lo-fi player. Point `src` at a file in `public/audio/`.
+**A new log entry** — append to `entries`, newest first:
+
+```ts
+{
+  date: "2026",
+  kind: "note",              // "work" | "note"
+  title: "Something I noticed",
+  summary: "One or two sentences.",
+  href: "https://…",         // optional; omit for entries that live only here
+}
+```
+
+**A new plate** — append to `plates`. Three shapes, each rendering differently:
+
+```ts
+{ kind: "field", no: "P·04", title: "…", caption: "…", formula: ["x = …"] }
+{ kind: "image", no: "P·05", title: "…", caption: "…", src: "/img/x.svg", alt: "…" }
+{ kind: "type",  no: "P·06", title: "…", caption: "…", quote: "…" }
+```
+
+**The résumé** — `roles`, `cvFacts` and the contact details, all in the same
+file. The home page and `/cv/` read from different fields on purpose: the log
+gets a title and a sentence, the résumé gets the rest.
 
 ## Design notes
 
@@ -115,7 +134,11 @@ uncaught errors. Read it with:
 JSON.parse(document.getElementById("qa-output").textContent)
 ```
 
+Note that seeking in the player only works against a server that honours HTTP
+Range requests. `python3 -m http.server` does not, so the seek bar will appear
+dead when testing that way; GitHub Pages and any Node static server do.
+
 Verified at 1440, 1280, 768 and 390 px wide, in Chrome with and without
-`prefers-reduced-motion`: no horizontal overflow, no console errors, grids and
-nav collapsing at the right breakpoints, Pretext splitting headings, and the
-player seeking, switching tracks, and expanding on every viewport.
+`prefers-reduced-motion`: no horizontal overflow, no console errors, Pretext
+splitting all three targets, and the player seeking, switching tracks, and
+expanding on every viewport.

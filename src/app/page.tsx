@@ -1,19 +1,15 @@
-import About from "@/components/About";
-import Contact from "@/components/Contact";
-import Experiments from "@/components/Experiments";
-import Hero from "@/components/Hero";
-import Notes from "@/components/Notes";
-import Work from "@/components/Work";
+import Colophon from "@/components/Colophon";
+import Cover from "@/components/Cover";
+import Plates from "@/components/Plates";
+import Stream from "@/components/Stream";
 
 export default function Home() {
   return (
     <>
-      <Hero />
-      <Work />
-      <Experiments />
-      <Notes />
-      <About />
-      <Contact />
+      <Cover />
+      <Stream />
+      <Plates />
+      <Colophon />
     </>
   );
 }
