@@ -5,6 +5,11 @@ interface QaReport {
   heroFontSize: string | null;
   nav: DOMRect | null;
   player: DOMRect | null;
+  playerPlaying: boolean | null;
+  cord: DOMRect | null;
+  cordChecked: string | null;
+  theme: string;
+  reveals: string;
   canvas: DOMRect | null;
   ditherCount: number;
   ditherLayer: string;
@@ -50,7 +55,24 @@ if (params.get("qa") === "1") {
       heroName: rect("[data-pretext-lines]"),
       heroFontSize: heroName ? getComputedStyle(heroName).fontSize : null,
       nav: rect("[data-nav]"),
-      player: rect("#player"),
+      player: rect("[data-player]"),
+      playerPlaying: (() => {
+        const button = document.querySelector("[data-player] button[aria-label=Pause]");
+        return button ? true : document.querySelector("[data-player] button[aria-label=Play]")
+          ? false
+          : null;
+      })(),
+      cord: rect("[role=switch]") && document.querySelector("[role=switch]")
+        ? document
+            .querySelector("[role=switch]")!
+            .parentElement!.getBoundingClientRect()
+        : null,
+      cordChecked:
+        document.querySelector("[role=switch]")?.getAttribute("aria-checked") ?? null,
+      theme: document.documentElement.dataset.theme ?? "light",
+      reveals: `${document.querySelectorAll(".reveal[data-in=true]").length}/${
+        document.querySelectorAll(".reveal").length
+      }`,
       canvas: rect("#field"),
       ditherCount: document.querySelectorAll("[data-dither]").length,
       ditherLayer: dither
