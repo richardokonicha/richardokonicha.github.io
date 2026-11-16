@@ -60,11 +60,10 @@ export default function RootLayout({
       className={`${serif.variable} ${sans.variable} ${mono.variable} no-js`}
       suppressHydrationWarning
     >
-      <body className="bg-paper font-sans text-ink antialiased max-md:pb-[14rem]">
-        {/* Flips the document to `.js` before anything paints, so the reveal styles
-            only apply when scripting is actually available, and restores the
-            stored theme before the first frame so a dark-mode visitor never
-            sees a white flash. */}
+      <head>
+        {/* Restores the stored theme before anything paints, so a dark-mode
+            visitor never sees a white flash, and flips the document to `.js`
+            so the reveal styles only apply when scripting is available. */}
         <script
           // eslint-disable-next-line react/no-danger
           dangerouslySetInnerHTML={{
@@ -72,7 +71,8 @@ export default function RootLayout({
               "(function(){var d=document.documentElement;d.classList.remove('no-js');d.classList.add('js');try{var t=localStorage.getItem('ro-theme');if(t==='dark')d.setAttribute('data-theme','dark');}catch(e){}})();",
           }}
         />
-
+      </head>
+      <body className="bg-paper font-sans text-ink antialiased max-md:pb-[14rem]">
         <a
           href="#main"
           className="fixed top-0 left-[-9999px] z-[100] bg-ink px-4 py-3 text-paper focus:top-4 focus:left-4"
