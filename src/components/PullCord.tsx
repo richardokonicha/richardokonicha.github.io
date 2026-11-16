@@ -583,7 +583,7 @@ export default function PullCord() {
         type="button"
         role="switch"
         aria-label="Light mode"
-        className="pointer-events-auto absolute top-[-10px] left-[-20px] h-[46px] w-[40px] cursor-grab touch-none bg-transparent select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="pointer-events-auto absolute top-[-10px] left-[-20px] h-[46px] w-[40px] cursor-grab touch-none bg-transparent select-none focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       />
     </div>
   );

@@ -14,6 +14,7 @@
  *  2. It floats, and it can be dragged anywhere. The position is remembered.
  */
 
+import { DetentText } from "@hayderkg/detent/text";
 import { Pause, Play, SkipBack, SkipForward, Volume2, VolumeX } from "lucide-react";
 import * as React from "react";
 
@@ -1105,7 +1106,9 @@ export default function Player() {
                 ))}
               </span>
               <span className="font-mono text-[0.6rem] tracking-[0.1em] text-muted uppercase">
-                Now playing
+                <DetentText>
+                  {playing ? "Playing" : clock.s > 0 ? "Paused" : "Ready"}
+                </DetentText>
               </span>
               <button
                 aria-label={muted ? "Unmute" : "Mute"}
@@ -1125,7 +1128,7 @@ export default function Player() {
                 record once, not every second. */}
             <div aria-live="polite" aria-atomic="true">
               <h2 className="mt-2 truncate font-serif text-[1.05rem] leading-tight">
-                {track.title}
+                <DetentText>{track.title}</DetentText>
               </h2>
               <p className="truncate text-[0.8rem] text-muted">{track.artist}</p>
             </div>
@@ -1207,7 +1210,7 @@ export default function Player() {
           aria-valuemin={0}
           aria-valuenow={Math.round(volume * 100)}
           aria-valuetext={muted ? "muted" : `${Math.round(volume * 100)}%`}
-          className="-my-1.5 cursor-pointer touch-none py-1.5 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+          className="-my-1.5 cursor-pointer touch-none py-1.5 outline-none focus-visible:outline focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
           data-no-drag=""
           onKeyDown={onVolKey}
           onLostPointerCapture={onVolUp}

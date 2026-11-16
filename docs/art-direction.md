@@ -12,6 +12,15 @@ the next addition does not have to be argued from scratch.
 not change with the log, and does not grow. It is the title page of a book, and
 the book does not get a new title page every time a page is added.
 
+The cover carries one moving thing: a **field** across its lower half — a
+hairline sine and a drift of particles the pointer leaves behind it. It is a
+background in the strict sense: `pointer-events: none`, so the name stays
+selectable and the links stay clickable; the pointer is read from `window`. It
+only draws in the lower half, where the page is empty, and it only wakes for a
+hand that actually travels — the nav and the pull cord live above that line and
+cannot stir it. It spends a fixed budget of particle life and then stops, so a
+resting cover runs zero animation frames.
+
 **The stream** is the book. Dated, newest first, every entry in one continuous
 column. Work and notes share the column because they are the same kind of thing
 — something that was made, and something that was noticed — and the `kind` label
@@ -35,6 +44,14 @@ sorted at module load, so the stream cannot drift out of order. Be honest with
 the granularity: a year when it was a year, a month when you know the month. Do
 not invent a day.
 
+There is no "plates" section. The earlier sketchbook had three studies — a
+random walk, a halftone, a Pretext-set quote — presented as if they were works.
+They were not: they were demos of techniques, and a demo is not a thing that was
+made. The one of them that described the site itself (the particle field) became
+the cover's background, where it is a property of the page rather than a
+trophy on it. If a study earns a place again it will be because it is a piece,
+not because it shows off a shader.
+
 ## Type
 
 - **Instrument Serif** for anything that wants to be read.
@@ -50,10 +67,9 @@ body, and a caption. Five sizes, and the clamp() in between is the whole scale.
 ## Colour
 
 Paper and ink, one accent, one ember. Nothing else. Dark mode is not an inversion
-— it is the same room with the lights off, so the recesses go *darker* rather
-than turning white. `--color-dark`, `--color-print` and `--color-lamp-*` are
-deliberately immune to the theme because they describe physical objects: a dark
-recess, a lit sheet, a lamp's two rooms.
+— it is the same room with the lights off, so the same paper goes dim and the
+ink goes light. `--color-lamp-*` is deliberately immune to the theme because it
+describes a physical object: the lamp's two rooms are always lit and unlit.
 
 A new colour has to justify itself against that, not against the last site.
 
@@ -65,15 +81,18 @@ different site.
 
 ## Motion
 
-Two moving parts, and no more: **the pull cord** and **the record deck**. Both
-are physical objects that respond to being touched, and both fall asleep when
-nothing is happening. A third would dilute both, and anything that moves without
-being asked to is decoration.
+Motion belongs to things that answer a hand: **the pull cord**, **the record
+deck**, **the detent drums** — the log's year filter and the player's rolling
+labels — and **the cover's field**, which the pointer draws. Every one is a
+physical control or a physical surface: it moves while it is being touched,
+clicks into place, and sleeps when nothing is happening. Nothing moves to
+announce itself, and a control that only decorates is not a control.
 
 Under `prefers-reduced-motion` the cord still answers a real pull, the disc holds
-still, the particle field is a finished drawing instead of an animation, and the
-idle tug stops entirely. The site never takes motion away from someone who asked
-for stillness — that was the bug the harness caught, and it is the rule now.
+still, the drums jump instead of coasting, the field is a finished drawing instead
+of a wake, and the idle tug stops entirely. The site never takes motion away from
+someone who asked for stillness — that was the bug the harness caught, and it is
+the rule now.
 
 ## The rules, in one line each
 
@@ -82,5 +101,6 @@ for stillness — that was the bug the harness caught, and it is the rule now.
 - `href` means "elsewhere", not "more".
 - Square corners; the record is the exception.
 - Paper, ink, one accent, one ember.
-- Two moving parts, both physical, both asleep by default.
+- The cover's field is a background: it never takes the pointer.
+- Motion is for things that answer a hand, and they sleep at rest.
 - Reduced motion is a mode, not a fallback.

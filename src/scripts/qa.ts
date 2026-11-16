@@ -11,8 +11,6 @@ interface QaReport {
   theme: string;
   reveals: string;
   canvas: DOMRect | null;
-  ditherCount: number;
-  ditherLayer: string;
   splitTargets: number;
   pretextState: string | null;
   fonts: string;
@@ -45,7 +43,6 @@ if (params.get("qa") === "1") {
 
   const run = () => {
     const heroName = document.querySelector<HTMLElement>("[data-pretext-lines]");
-    const dither = document.querySelector<HTMLElement>("[data-dither]");
 
     const report: QaReport = {
       viewport: { width: window.innerWidth, height: window.innerHeight },
@@ -74,10 +71,6 @@ if (params.get("qa") === "1") {
         document.querySelectorAll(".reveal").length
       }`,
       canvas: rect("#field"),
-      ditherCount: document.querySelectorAll("[data-dither]").length,
-      ditherLayer: dither
-        ? getComputedStyle(dither, "::after").backgroundImage.slice(0, 40)
-        : "none",
       splitTargets: document.querySelectorAll(".is-split").length,
       pretextState:
         (window as unknown as { __pretextState?: string }).__pretextState ??
