@@ -140,17 +140,22 @@ properly licensed tracks (and update the `artist` fields in
 
 `npm run build`, serve `out/`, then open the page with `?qa=1`. The `qa` script
 appends a hidden `<pre id="qa-output">` holding a JSON report: horizontal
-overflow, hero font size, nav and player rects, dither count and layer,
-split-heading count, Pretext state, font status, image load state, and any
-uncaught errors. Read it with:
+overflow, hero font size, nav / player / pull-cord rects, the theme and the
+cord's checked state, how many reveals have fired, the playing state, dither
+count and layer, split-heading count, Pretext state, font status, image load
+state, and any uncaught errors. Read it with:
 
 ```js
 JSON.parse(document.getElementById("qa-output").textContent)
 ```
 
-Note that seeking in the player only works against a server that honours HTTP
-Range requests. `python3 -m http.server` does not, so the seek bar will appear
-dead when testing that way; GitHub Pages and any Node static server do.
+Two things to know when reading the report:
+
+- Images are `loading="lazy"`, so anything below the fold reads as not loaded
+  until you scroll to it. The report runs 1.5 s after load without scrolling.
+- Seeking in the player only works against a server that honours HTTP Range
+  requests. `python3 -m http.server` does not, so the seek bar will appear dead
+  when testing that way; GitHub Pages and any Node static server do.
 
 Verified at 1440, 1280, 768 and 390 px wide, in Chrome with and without
 `prefers-reduced-motion`, in both themes: no horizontal overflow, no console
