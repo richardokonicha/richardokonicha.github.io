@@ -135,7 +135,7 @@ export async function main() {
         ["home", "/"],
         ["cv", "/cv/"],
       ]) {
-        await h.goto("/");
+        await h.goto(path);
         await h.ev(`(()=>{try{localStorage.setItem('ro-theme','${theme}')}catch(e){};return 1})()`);
         await h.reload();
         /* reduced motion marks every reveal as in, so nothing is transparent */

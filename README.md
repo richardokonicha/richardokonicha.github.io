@@ -5,8 +5,9 @@ kept on its own page.
 
 Next.js (App Router, statically exported) + Tailwind CSS v4 + TypeScript. Two
 shadcn/ui primitives (`Button`, `Card`) rebuilt on this project's tokens, and
-hand-written utility classes everywhere else. Three small client components hold
-all of the behaviour: the page enhancements, the pull cord and the player.
+hand-written utility classes everywhere else. The page is server-rendered; a
+handful of small client islands hold the interaction: the page enhancements, the
+pull cord, the player, and the detent drums.
 
 ## Develop
 
@@ -26,7 +27,9 @@ npm run og         # re-render public/og.png from tools/og.html
 
 [`docs/art-direction.md`](docs/art-direction.md) is the short version of why the
 site looks like this: two surfaces (cover + dated stream), the type scale, the
-colour rules, square corners, and the two moving parts.
+colour rules, square corners, and the moving parts (the cord, the deck, the
+drums). [`docs/detent.md`](docs/detent.md) reviews every Detent example and
+records which ones earned a place.
 
 ## Deploy
 
@@ -51,13 +54,13 @@ src/
     globals.css     Tailwind v4 entry: @theme tokens, @layer base, @utility
     page.tsx        the log
     cv/page.tsx     the résumé
-  components/       Cover, Stream, Plates, Colophon, Nav, SiteFooter, Dither,
+  components/       Cover, Stream, Colophon, Nav, SiteFooter, Wheel,
                     PullCord, Player, SiteBehaviour
     ui/             button.tsx, card.tsx — shadcn primitives on project tokens
   scripts/          plain-DOM progressive enhancement
     behaviour.ts    nav state, reveal-on-scroll, section spy, boots the rest
     pretext.ts      line breaking for display type
-    field.ts        generative particle field
+    field.ts        the cover's pointer-drawn field
     qa.ts           opt-in layout audit (?qa=1)
   lib/              site.ts (all content), classes.ts (class strings),
                     spring.ts (the shared spring integrator), utils.ts (cn)
@@ -70,18 +73,19 @@ scripts/
   qa/               the regression suite (see QA)
 docs/
   art-direction.md  the rules behind the look
+  detent.md         every Detent example, and what earned a place
 tools/
   og.html           the link-unfurl card, in paper and ink
 ```
 
-### Why there are only three client components
+### Why the client components are small islands
 
-Every other component is a server component. `SiteBehaviour` holds the
-progressive enhancement, written as plain DOM scripts against `data-*` attributes
-and imported inside `useEffect` — importing them at module scope would evaluate
-them during the static export, where `document` does not exist. `PullCord` and
-`Player` are the two pieces that are genuinely interactive: each is a ref, a
-`requestAnimationFrame` loop and some pointer handlers.
+Every page is server-rendered. `SiteBehaviour` holds the progressive
+enhancement, written as plain DOM scripts against `data-*` attributes and
+imported inside `useEffect` — importing them at module scope would evaluate them
+during the static export, where `document` does not exist. The interactive
+islands are `PullCord`, `Player` and `Stream`: each owns one interaction and
+nothing else. `Wheel` wraps Detent's headless hook; `Stream` filters the log.
 
 The trade-off is deliberate: React hydrates the page, but the markup you read in
 `src/components` is the markup that ships.
@@ -107,14 +111,6 @@ The stream sorts on `date` at module load, so it cannot drift out of order.
 Keep the granularity honest: a year when it was a year, a month when you know the
 month.
 
-**A new plate** — append to `plates`. Three shapes, each rendering differently:
-
-```ts
-{ kind: "field", no: "P·04", title: "…", caption: "…", formula: ["x = …"] }
-{ kind: "image", no: "P·05", title: "…", caption: "…", src: "/img/x.svg", alt: "…" }
-{ kind: "type",  no: "P·06", title: "…", caption: "…", quote: "…" }
-```
-
 **The résumé** — `roles`, `cvFacts` and the contact details, all in the same
 file. The home page and `/cv/` read from different fields on purpose: the log
 gets a title and a sentence, the résumé gets the rest.
@@ -131,10 +127,16 @@ gets a title and a sentence, the résumé gets the rest.
   third-party font request leaves the page.
 - **Colour** — paper/ink, with a single accent and one ember tone. All of it is
   declared in `@theme` in `src/app/globals.css`, so a token change propagates.
-- **Dither** — images are Bayer-dithered by `dither-plugin`, driven by the
-  `--dither-cell` and `--dither-contrast` custom properties on `[data-dither]`.
-  Sizes are literal classes (`dither-xs` … `dither-2xl`) so the plugin can read
-  them statically.
+- **Detent** — the log's year filter and the player's rolling labels use
+  `@hayderkg/detent` (headless `useDetent`, `DetentText`, `DetentNumber`). The
+  wheels wear this project's tokens, sleep at rest and jump under reduced motion.
+  The example-by-example review is in [`docs/detent.md`](docs/detent.md).
+- **The cover's field** — one canvas, `pointer-events: none`, painted from the
+  live `--color-ink` token. A hairline sine sits at its foot; the pointer leaves a
+  particle wake in the open lower half. It spends a fixed budget of particle life
+  and then stops, so a resting cover runs zero animation frames. Above the
+  field's midline the pointer is ignored — that band is the nav, the cord and the
+  name.
 - **Motion** — reveal-on-scroll is opt-in on `.js` (see the `js` custom variant),
   so content is visible with scripting disabled. Everything collapses under
   `prefers-reduced-motion`.
@@ -178,10 +180,10 @@ protocol. Nothing to install, no Playwright.
 
 | suite | what it holds down |
 | --- | --- |
-| `layout` | no horizontal overflow at 1440/1280/768/390, reveals firing, cord and player on screen and not overlapping, the cord flipping the theme, the body following, reduced motion leaving the disc and the particle field still, the phone nav opening and closing |
+| `layout` | no horizontal overflow at 1440/1280/768/390, reveals firing, cord and player on screen and not overlapping, the year drum on screen, the cover's field painting a wake and taking no pointer, the cord flipping the theme, the body following, reduced motion leaving the disc and the field still, the phone nav opening and closing |
 | `contrast` | WCAG AA on **every** rendered text node, in both themes, on `/` and `/cv/` — the audit walks the DOM, so a restructure cannot silently turn it into a no-op |
-| `motion` | the idle tug never changes the theme in 16 s, a real pull still does, and both `requestAnimationFrame` loops return to zero |
-| `keys` | the seek and volume sliders by keyboard, `End`/`Home`, the tab order reaching the cord and the transport, and the scroll spy setting *and clearing* |
+| `motion` | the idle tug never changes the theme in 16 s, a real pull still does, and every `requestAnimationFrame` loop (the cord's and the cover field's) returns to zero |
+| `keys` | the seek and volume sliders by keyboard, `End`/`Home`, the year drum filtering 7 → 3 and *Show all* restoring it, the tab order reaching the cord and the transport, and the scroll spy setting *and clearing* |
 
 Headless Chrome reports `prefers-reduced-motion: reduce` unless told otherwise, so
 every suite sets the media feature explicitly.
@@ -200,5 +202,5 @@ against a server that honours Range, which `python3 -m http.server` does not.
 Verified at 1440, 1280, 768 and 390 px wide, in Chrome with and without
 `prefers-reduced-motion`, in both themes: no horizontal overflow, no console
 errors, every reveal firing, the cord's idle tug leaving the theme alone, the
-player playing, seeking, scrubbing and switching tracks, and the nav opening and
-closing on a phone.
+player playing, seeking, scrubbing and switching tracks, the cover's field waking
+for the pointer and sleeping again, and the nav opening and closing on a phone.

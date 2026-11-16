@@ -1,6 +1,4 @@
 @import "tailwindcss";
-/* ordered (Bayer) dither surface: `dither`, `dither-xs` … `dither-2xl` */
-@import "dither-plugin";
 
 /* ------------------------------------------------------------------ *
  * Design tokens
@@ -15,23 +13,6 @@
   --color-muted: #6b6257;
   --color-rule: #d5cbb8;
   --color-accent: #9c3d1a;
-
-  /* dark sections — these do *not* flip with the theme. The Plates recess is
-     always dark, so it needs its own fixed foreground; using `paper`/`ink`
-     there collapses to 1:1 the moment the theme inverts. */
-  --color-dark: #12100d;
-  --color-dark-2: #1a1713;
-  --color-dark-muted: #a79d8e;
-  --color-dark-rule: #332d25;
-  --color-dark-ink: #f4f0e6;
-  --color-ember: #d06a3f;
-
-  /* A sheet of paper inside the dark recess. The particle field paints itself
-     #f4f0e6, so its margin — and anything sitting on that margin, like the
-     speed controls — has to stay light-theme colours whatever the theme does. */
-  --color-print: #f4f0e6;
-  --color-print-ink: #14110e;
-  --color-print-muted: #6b6257;
 
   /* the lamp's two rooms, deliberately immune to the theme switch: the lit
      room is always paper, the unlit room always ink, so the little scene
@@ -85,10 +66,6 @@
  *
  * The tokens above are the light theme. Flipping the semantic six is all it
  * takes: every utility resolves through them, so the whole page follows.
- *
- * `--color-dark` is the "recessed section" background. In dark mode it goes
- * *darker* than the page rather than inverting to light, so the Plates
- * section stays a quiet recess instead of glaring white.
  * ------------------------------------------------------------------ */
 
 :root {
@@ -105,12 +82,6 @@
   --color-muted: #a79d8e;
   --color-rule: #332d25;
   --color-accent: #d06a3f;
-
-  --color-dark: #0b0a08;
-  --color-dark-2: #14110d;
-  --color-dark-muted: #a79d8e;
-  --color-dark-rule: #2b251d;
-  --color-ember: #d06a3f;
 }
 
 /* The theme swap is a colour fade, not a cut. The class goes on for the
@@ -167,8 +138,8 @@
 
 /* ------------------------------------------------------------------ *
  * Composite pieces that are single cohesive ideas, not page styling:
- * the page gutter and the Pretext line mask. The Bayer dither surface
- * comes from `dither-plugin`. Everything else is a plain utility class.
+ * the page gutter, the Pretext line mask, and the falloff a Detent row
+ * reads from its live `--abs-offset`. Everything else is a plain utility.
  * ------------------------------------------------------------------ */
 
 @utility wrap {
@@ -188,4 +159,11 @@
   white-space: pre;
   transform: translateY(112%);
   will-change: transform;
+}
+
+/* A wheel row reads its live distance from Detent: solid at the centre and
+   falling away either side. `--abs-offset` is written every frame, outside
+   React, so this is a plain calc rather than a transition. */
+@utility wheel-row {
+  opacity: calc(1 - var(--abs-offset) * 0.32);
 }

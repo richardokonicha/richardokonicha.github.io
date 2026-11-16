@@ -23,7 +23,8 @@ export default function Colophon() {
 
           <p className="max-w-[54ch] text-[0.95rem] text-muted">
             Set in Instrument Serif, Inter &amp; Fira Code. Pretext does the line
-            breaking, CSS does the dithering, and a little Web Audio does the rest.
+            breaking, a canvas does the cover's drift, and a little Web Audio does
+            the rest.
           </p>
         </div>
 

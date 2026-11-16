@@ -10,7 +10,6 @@ export const site = {
 
 export const nav = [
   { label: "Log", href: "#log" },
-  { label: "Plates", href: "#plates" },
   { label: "Colophon", href: "#colophon" },
   { label: "Résumé", href: "/cv/" },
 ] as const;
@@ -103,63 +102,6 @@ export function formatDate(entry: Entry): string {
   const to = entry.date.slice(0, 4);
   return from === to ? entry.date : `${from}–${to.slice(2)}`;
 }
-
-/* ------------------------------------------------------------------ *
- * Plates — the visual end of the log. Each renders differently.
- * ------------------------------------------------------------------ */
-
-export type Plate =
-  | {
-      kind: "field";
-      no: string;
-      title: string;
-      caption: string;
-      formula: readonly string[];
-    }
-  | {
-      kind: "image";
-      no: string;
-      title: string;
-      caption: string;
-      src: string;
-      alt: string;
-    }
-  | {
-      kind: "type";
-      no: string;
-      title: string;
-      caption: string;
-      quote: string;
-    };
-
-export const plates: Plate[] = [
-  {
-    kind: "field",
-    no: "P·01",
-    title: "Unreproducible",
-    caption:
-      "A particle that never repeats itself. Each frame, a random walk; the path accumulates into a cloud that cannot be reproduced.",
-    formula: ["x = x + (random() − 0.5) × 8", "y = y + (random() − 0.5) × 8"],
-  },
-  {
-    kind: "image",
-    no: "P·02",
-    title: "Ordered",
-    caption:
-      "A continuous image reduced to a grid of dots. Ordered Bayer dithering — no blur, no gradient, just threshold and repetition.",
-    src: "/img/study-01.svg",
-    alt: "Generative field study reduced to ordered dots",
-  },
-  {
-    kind: "type",
-    no: "P·03",
-    title: "Set",
-    caption:
-      "Line-by-line composition measured with Pretext — the browser's own font engine, used without a single DOM read.",
-    quote:
-      "Typography is not the art of seeing the words. It is the art of making the space between them visible.",
-  },
-];
 
 /* ------------------------------------------------------------------ *
  * Résumé — the long form, on its own page.

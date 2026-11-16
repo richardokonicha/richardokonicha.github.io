@@ -5,9 +5,17 @@ export default function Cover() {
   return (
     <section
       id="top"
-      className="flex min-h-svh items-center pt-[calc(var(--spacing-nav)_+_clamp(3rem,8vh,6rem))] pb-[clamp(3rem,8vh,6rem)] max-tb:min-h-0 max-tb:pt-32"
+      className="relative flex min-h-svh items-center overflow-hidden pt-[calc(var(--spacing-nav)_+_clamp(3rem,8vh,6rem))] pb-[clamp(3rem,8vh,6rem)] max-tb:min-h-0 max-tb:pt-32"
     >
-      <div className="wrap grid grid-cols-1 items-center">
+      {/* The field is a background, so it cannot take the pointer: the copy
+          above it has to stay selectable and clickable. */}
+      <canvas
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0 size-full"
+        id="field"
+      />
+
+      <div className="wrap relative z-10 grid grid-cols-1 items-center">
         <div className="hero-copy">
           <h1
             data-pretext-lines=""

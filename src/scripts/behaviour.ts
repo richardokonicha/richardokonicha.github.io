@@ -108,10 +108,14 @@ if ("IntersectionObserver" in window && sections.length) {
 }
 
 /* ------------------------------------------------------------------ *
- * experiments
+ * the cover's field
  * ------------------------------------------------------------------ */
 
 initPretextLines();
 
 const field = document.getElementById("field");
-if (field instanceof HTMLCanvasElement) initField(field);
+if (field instanceof HTMLCanvasElement) {
+  /* A background: it paints the cover, takes no pointer, and stops itself
+     once the pointer's wake has faded. */
+  void initField(field);
+}

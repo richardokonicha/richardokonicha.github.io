@@ -82,6 +82,63 @@ export async function main() {
       Math.abs((await h.ev("document.getElementById('audio').volume")) - 0.2) < 0.001,
     );
 
+    /* the volume rail's outline is a focus ring, not a UA default */
+    await h.ev(`document.querySelector('[aria-label="Seek"]').focus()`);
+    let volRing = null;
+    for (let i = 0; i < 8; i += 1) {
+      await h.key("Tab", "Tab", 9);
+      const label = await h.ev(`document.activeElement?.getAttribute('aria-label')`);
+      if (label === "Volume") {
+        volRing = await h.ev(
+          `(()=>{const a=document.activeElement;const cs=getComputedStyle(a);` +
+            `return {fv:a.matches(':focus-visible'),style:cs.outlineStyle,width:cs.outlineWidth}})()`,
+        );
+        break;
+      }
+    }
+    check(
+      "volume slider has a keyboard focus ring",
+      volRing && volRing.fv && volRing.style === "solid",
+      JSON.stringify(volRing),
+    );
+
+    /* ---- the year drum filters the log ---- */
+    const logWheel = '[role=listbox][aria-label="Filter the log by year"]';
+    const visible = () =>
+      h.ev(`[...document.querySelectorAll('#log ol > li')].filter(li=>!li.hidden).length`);
+    await h.ev(`document.querySelector(${JSON.stringify(logWheel)}).focus()`);
+    const all = await visible();
+    await press("ArrowRight");
+    await sleep(800);
+    const filtered = await visible();
+    check(
+      "year drum filters the log",
+      filtered > 0 && filtered < all,
+      `${all} -> ${filtered}`,
+    );
+    await h.ev(`document.querySelector('#log button')?.click()`);
+    await sleep(900);
+    check(
+      "Show all restores every entry",
+      (await visible()) === all,
+      `${filtered} -> ${await visible()}`,
+    );
+
+    /* the drum has to be visible to a keyboard, not just focusable */
+    await h.ev(`document.querySelector('a[href="#log"].group').focus()`);
+    await h.key("Tab", "Tab", 9);
+    await sleep(250);
+    const ring = await h.ev(
+      `(()=>{const a=document.activeElement;const cs=getComputedStyle(a);` +
+        `return {role:a.getAttribute('role'),fv:a.matches(':focus-visible'),` +
+        `style:cs.outlineStyle,width:cs.outlineWidth,color:cs.outlineColor}})()`,
+    );
+    check(
+      "year drum has a keyboard focus ring",
+      ring.role === "listbox" && ring.fv && ring.style === "solid" && parseFloat(ring.width) >= 2,
+      JSON.stringify(ring),
+    );
+
     /* ---- tab order reaches the cord and the player ---- */
     await h.ev(`document.querySelector(${JSON.stringify(seek)}).focus()`);
     const seen = [];
@@ -119,10 +176,11 @@ export async function main() {
     await h.ev("window.scrollTo(0,0)");
     await sleep(700);
     check("no link is active at the top", (await active()) === "(none)", await active());
-    for (const id of ["log", "plates"]) {
-      const label = id === "log" ? "Log" : "Plates";
-      check(`#${id} marks ${label} active`, (await go(id)) === label, await active());
-    }
+    check(
+      "#log marks Log active",
+      (await go("log")) === "Log",
+      await active(),
+    );
     await h.ev("window.scrollTo(0,0)");
     await sleep(700);
     check(

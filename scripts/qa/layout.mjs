@@ -22,6 +22,7 @@ const PROBE = `(() => {
   const wr = widget?.getBoundingClientRect();
   const cr = card?.getBoundingClientRect();
   const bead = q('.bead')?.getBoundingClientRect();
+  const logWheel = q('[role=listbox][aria-label="Filter the log by year"]')?.getBoundingClientRect();
   const overlap = wr && cr
     ? !(cr.x > wr.right || cr.right < wr.x || cr.y > wr.bottom || cr.bottom < wr.y)
     : null;
@@ -42,6 +43,8 @@ const PROBE = `(() => {
     playerInside: cr
       ? cr.x >= -0.5 && cr.y >= -0.5 && cr.right <= innerWidth + 0.5 && cr.bottom <= innerHeight + 0.5
       : null,
+    logWheel: logWheel ? { x: Math.round(logWheel.x), r: Math.round(logWheel.right), w: Math.round(logWheel.width) } : null,
+    logWheelInside: logWheel ? logWheel.x >= -0.5 && logWheel.right <= innerWidth + 0.5 : null,
     overlap,
     navToggle: q('[data-nav-toggle]') ? getComputedStyle(q('[data-nav-toggle]')).display : null,
   };
@@ -79,6 +82,7 @@ export async function main() {
         `checked=${p.checked} theme=${p.theme}`,
       );
       check(`${tag}: player on screen`, p.playerInside === true, JSON.stringify(p.player));
+      check(`${tag}: year drum on screen`, p.logWheelInside === true, JSON.stringify(p.logWheel));
       check(`${tag}: no cord/player overlap`, p.overlap === false);
       check(`${tag}: no console errors`, h.logs.length === 0, h.logs.slice(0, 3).join(" | "));
 
@@ -96,6 +100,39 @@ export async function main() {
         await sleep(900);
       }
     }
+
+    /* the field is a background: it has to answer the pointer without ever
+       taking one from the copy above it. */
+    await h.setViewport(1440, 900);
+    await h.goto("/");
+    await h.clearStore();
+    await h.ev("window.scrollTo(0,0)");
+    await sleep(900);
+
+    const painted = () =>
+      h.ev(
+        `(()=>{const c=document.getElementById('field');` +
+          `const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;` +
+          `let n=0;for(let i=0;i<d.length;i+=4)if(d[i+3]>0)n++;return n})()`,
+      );
+    const still0 = await painted();
+    await sleep(600);
+    const still1 = await painted();
+    check("the field sleeps while the pointer is still", still0 === still1, `${still0}`);
+
+    for (let i = 0; i < 14; i += 1) {
+      await h.mouse("mouseMoved", { x: 420 + i * 26, y: 520 + Math.sin(i / 2) * 90 }, 1);
+      await sleep(45);
+    }
+    await sleep(500);
+    const stirred = await painted();
+    check("a pointer sweep paints the field", stirred > still0, `${still0} -> ${stirred}`);
+    check(
+      "the cover canvas takes no pointer",
+      await h.ev(
+        `getComputedStyle(document.getElementById('field')).pointerEvents === 'none'`,
+      ),
+    );
 
     /* the volume rail takes a pointer as well as keys */
     await h.setViewport(1440, 900);
@@ -144,19 +181,25 @@ export async function main() {
     );
     await h.click("[aria-label=Pause]");
 
-    /* the particle field must be a still frame for those same visitors */
-    await h.ev(`document.getElementById('plates').scrollIntoView({block:'center'})`);
-    await sleep(1500);
-    const ink = `(()=>{const c=document.getElementById('field');` +
+    /* the cover's field must be a still frame for those same visitors */
+    await h.ev("window.scrollTo(0,0)");
+    await sleep(1200);
+    const fieldStill = `(()=>{const c=document.getElementById('field');` +
       `const d=c.getContext('2d').getImageData(0,0,c.width,c.height).data;` +
-      `let n=0;for(let i=0;i<d.length;i+=4)if(d[i]<100)n++;return n})()`;
-    const inkA = await h.ev(ink);
+      `let n=0;for(let i=0;i<d.length;i+=4)if(d[i+3]>0)n++;` +
+      `return {painted:n,w:c.width,h:c.height}})()`;
+    const fieldA = await h.ev(fieldStill);
     await sleep(1500);
-    const inkB = await h.ev(ink);
+    const fieldB = await h.ev(fieldStill);
     check(
-      "reduced motion: particle field holds still",
-      inkA === inkB && inkA > 0,
-      `${inkA} -> ${inkB}`,
+      "reduced motion: the cover field is a finished drawing",
+      fieldA.painted > 0 && fieldA.painted === fieldB.painted,
+      JSON.stringify(fieldA),
+    );
+    check(
+      "reduced motion: the canvas covers the hero",
+      fieldA.w >= 1000 && fieldA.h >= 700,
+      `${fieldA.w}x${fieldA.h}`,
     );
 
     /* mobile nav */
