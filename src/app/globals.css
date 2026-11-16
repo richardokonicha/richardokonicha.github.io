@@ -23,6 +23,12 @@
   --color-dark-rule: #332d25;
   --color-ember: #d06a3f;
 
+  /* the lamp's two rooms, deliberately immune to the theme switch: the lit
+     room is always paper, the unlit room always ink, so the little scene
+     inside the pull-cord reads the same whatever the page is doing */
+  --color-lamp-lit: #f4f0e6;
+  --color-lamp-dark: #12100d;
+
   /* type — the first family in each stack is injected by next/font, which
      self-hosts the files and exposes them as a CSS variable */
   --font-serif: var(--font-instrument), "Iowan Old Style", "Palatino Linotype", Palatino,
@@ -63,6 +69,56 @@
 /* JS is assumed until proven otherwise: reveal states only apply once the
    document element carries `.js`, so no-JS visitors see the plain page. */
 @custom-variant js (&:where(.js, .js *));
+
+/* ------------------------------------------------------------------ *
+ * Dark theme
+ *
+ * The tokens above are the light theme. Flipping the semantic six is all it
+ * takes: every utility resolves through them, so the whole page follows.
+ *
+ * `--color-dark` is the "recessed section" background. In dark mode it goes
+ * *darker* than the page rather than inverting to light, so the Plates
+ * section stays a quiet recess instead of glaring white.
+ * ------------------------------------------------------------------ */
+
+:root {
+  color-scheme: light;
+}
+
+[data-theme="dark"] {
+  color-scheme: dark;
+
+  --color-paper: #12100d;
+  --color-paper-2: #1b1712;
+  --color-ink: #f4f0e6;
+  --color-ink-soft: #e4dccd;
+  --color-muted: #a79d8e;
+  --color-rule: #332d25;
+  --color-accent: #d06a3f;
+
+  --color-dark: #0b0a08;
+  --color-dark-2: #14110d;
+  --color-dark-muted: #a79d8e;
+  --color-dark-rule: #2b251d;
+  --color-ember: #d06a3f;
+}
+
+/* The theme swap is a colour fade, not a cut. The class goes on for the
+   length of the transition and is removed again, so ordinary component
+   transitions (hovers, the player) are never overridden. */
+@media (prefers-reduced-motion: no-preference) {
+  .theme-anim,
+  .theme-anim *,
+  .theme-anim *::before,
+  .theme-anim *::after {
+    transition:
+      background-color 420ms var(--ease-silk),
+      border-color 420ms var(--ease-silk),
+      color 420ms var(--ease-silk),
+      fill 420ms var(--ease-silk),
+      stroke 420ms var(--ease-silk) !important;
+  }
+}
 
 /* ------------------------------------------------------------------ *
  * Base

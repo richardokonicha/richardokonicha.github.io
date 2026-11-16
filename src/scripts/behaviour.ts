@@ -1,5 +1,4 @@
 import { initField } from "./field";
-import { initPlayer } from "./player";
 import { initPretextLines } from "./pretext";
 
 /* ------------------------------------------------------------------ *
@@ -106,11 +105,10 @@ if ("IntersectionObserver" in window && sections.length) {
 }
 
 /* ------------------------------------------------------------------ *
- * experiments + player
+ * experiments
  * ------------------------------------------------------------------ */
 
 initPretextLines();
-initPlayer();
 
 const field = document.getElementById("field");
 if (field instanceof HTMLCanvasElement) initField(field);
