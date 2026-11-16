@@ -969,6 +969,7 @@ export default function Player() {
       <style>{ROLL_KEYFRAMES}</style>
       <Card
         ref={rootRef}
+        data-player=""
         onPointerDown={onDragStart}
         onPointerMove={onDragMove}
         onPointerUp={onDragEnd}

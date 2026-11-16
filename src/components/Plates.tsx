@@ -10,7 +10,7 @@ const speeds = [
 ];
 
 const speedButton =
-  "cursor-pointer appearance-none border border-paper/22 px-[0.5rem] py-[0.28rem] font-mono text-[0.6rem] tracking-[0.04em] text-dark-muted transition-colors duration-200 hover:border-paper/55 hover:text-paper data-[active=true]:border-paper data-[active=true]:bg-paper data-[active=true]:text-ink";
+  "cursor-pointer appearance-none border border-print-ink/22 px-[0.5rem] py-[0.28rem] font-mono text-[0.6rem] tracking-[0.04em] text-print-muted transition-colors duration-200 hover:border-print-ink/55 hover:text-print-ink data-[active=true]:border-print-ink data-[active=true]:bg-print-ink data-[active=true]:text-print";
 
 const head =
   "mb-[1.25rem] flex items-baseline gap-[0.75rem] border-t border-dark-rule pt-[0.9rem]";
@@ -22,12 +22,12 @@ export default function Plates() {
   return (
     <section
       id="plates"
-      className={cx(section, "scroll-mt-20 border-t border-dark bg-dark text-paper")}
+      className={cx(section, "scroll-mt-20 border-t border-dark bg-dark text-dark-ink")}
     >
       <div className="wrap">
         <header
           className={cx(
-            "mb-[clamp(2rem,5vh,3.5rem)] flex flex-wrap items-baseline justify-between gap-x-[1.5rem] gap-y-[0.4rem] border-t border-paper/28 pt-[1.1rem]",
+            "mb-[clamp(2rem,5vh,3.5rem)] flex flex-wrap items-baseline justify-between gap-x-[1.5rem] gap-y-[0.4rem] border-t border-dark-ink/28 pt-[1.1rem]",
             reveal,
           )}
         >
@@ -57,13 +57,13 @@ export default function Plates() {
 
               {plate.kind === "field" ? (
                 <>
-                  <div className="border border-dark-rule bg-paper p-[0.6rem]">
+                  <div className="border border-dark-rule bg-print p-[0.6rem]">
                     <canvas
                       id="field"
                       width={400}
                       height={400}
                       aria-label="A random-walk particle field drawing itself"
-                      className="block aspect-square h-auto w-full cursor-crosshair bg-paper [image-rendering:pixelated]"
+                      className="block aspect-square h-auto w-full cursor-crosshair bg-print [image-rendering:pixelated]"
                     />
                     <div className="mt-[0.6rem] flex flex-wrap items-center justify-between gap-[0.5rem]">
                       <div
@@ -141,7 +141,7 @@ export default function Plates() {
                 <>
                   <blockquote
                     data-pretext-lines=""
-                    className="border-l border-paper/28 py-[0.25rem] pr-0 pl-[1.25rem] font-serif text-[clamp(1.7rem,3vw,2.5rem)] leading-[1.08] tracking-[-0.015em] text-paper"
+                    className="border-l border-dark-ink/28 py-[0.25rem] pr-0 pl-[1.25rem] font-serif text-[clamp(1.7rem,3vw,2.5rem)] leading-[1.08] tracking-[-0.015em] text-dark-ink"
                   >
                     {plate.quote}
                   </blockquote>
