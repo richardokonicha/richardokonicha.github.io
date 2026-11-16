@@ -32,6 +32,15 @@ const mono = Fira_Code({
 
 const SITE_URL = "https://richardokonicha.github.io";
 
+/* 1200×630, rendered from paper and ink so a link unfurls in the site's own
+   colours rather than a grey placeholder. */
+const socialImage = {
+  url: "/og.png",
+  width: 1200,
+  height: 630,
+  alt: "Richard Okonicha — engineer and writer",
+};
+
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
   title: site.title,
@@ -43,11 +52,13 @@ export const metadata: Metadata = {
     title: site.title,
     description: site.description,
     siteName: site.name,
+    images: [socialImage],
   },
   twitter: {
     card: "summary_large_image",
     title: site.title,
     description: site.description,
+    images: [socialImage.url],
   },
 };
 

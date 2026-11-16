@@ -15,7 +15,11 @@ import { useEffect } from "react";
 export default function SiteBehaviour() {
   useEffect(() => {
     void import("@/scripts/behaviour");
-    void import("@/scripts/qa");
+    /* The audit is a development tool: only download and run it when it was
+       asked for, so ordinary visitors never pay for it. */
+    if (new URLSearchParams(window.location.search).get("qa") === "1") {
+      void import("@/scripts/qa");
+    }
   }, []);
 
   return null;

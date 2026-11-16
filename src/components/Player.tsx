@@ -469,8 +469,6 @@ export default function Player() {
   const dragRef = React.useRef<{ id: number; dx: number; dy: number } | null>(null);
   const posRef = React.useRef<{ x: number; y: number } | null>(null);
 
-  indexRef.current = trackIndex;
-
   const duration = (audio: HTMLAudioElement | null, fallback: number) => {
     const d = audio?.duration;
     return typeof d === "number" && Number.isFinite(d) && d > 0 ? d : fallback;
@@ -481,16 +479,28 @@ export default function Player() {
     const e = engineRef.current;
     const audio = audioRef.current;
     if (e) {
+      /* stopCruise first: it reads the live WAAPI angle back into e.angle, so
+         zeroing before it would be overwritten and the disc would keep the
+         angle it stopped at instead of returning to the top. */
+      stopCruise(e, discRef.current);
       e.time = 0;
       e.duration = duration(audio, list[nextIndex]?.duration ?? 1);
       e.angle = 0;
       e.omega = 0;
-      stopCruise(e, discRef.current);
     }
     if (audio) {
       audio.src = list[nextIndex]!.src;
       audio.load();
-      if (e?.playing) void audio.play().catch(() => undefined);
+      if (e?.playing) {
+        void audio.play().catch(() => {
+          /* autoplay refused or the file would not decode: stop the deck
+             instead of leaving a spinning disc behind a "paused" button */
+          e.playing = false;
+          setPlaying(false);
+          stopCruise(e, discRef.current);
+          wakeRef.current();
+        });
+      }
     }
     indexRef.current = nextIndex;
     setTrackIndex(nextIndex);
@@ -535,6 +545,10 @@ export default function Player() {
     };
 
     const handleEnds = () => {
+      /* `ended` owns the advance: if the media has already ended, its event is
+         queued and will call loadTrack itself. Advancing here too would skip a
+         track whenever a frame happened to land between the two. */
+      if (media?.ended) return;
       if (e.time >= e.duration && e.playing && !e.held && !e.barDrag) {
         loadTrack(indexRef.current + 1);
         return;
@@ -765,6 +779,10 @@ export default function Player() {
         if (attempt) attempt.catch(() => {
           e.playing = false;
           setPlaying(false);
+          /* the cruise is already running; without this the disc would keep
+             turning under a "paused" deck forever (autoplay refused, no
+             audio device, decode error) */
+          stopCruise(e, discRef.current);
           wakeRef.current();
         });
       }
