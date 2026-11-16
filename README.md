@@ -17,6 +17,7 @@ npm run dev        # http://localhost:3000
 
 ```sh
 npm run build      # static export -> out/
+npm run typecheck  # tsc --noEmit, no emit
 ```
 
 ## Deploy
@@ -54,7 +55,7 @@ src/
                     spring.ts (the shared spring integrator), utils.ts (cn)
   vendor/           vendored Pretext build + hand-written .d.mts
 public/
-  img/  audio/
+  img/  audio/  og.png   # og.png is the 1200×630 link unfurl
 ```
 
 ### Why there are only three client components

@@ -89,13 +89,16 @@ const sections = links
 if ("IntersectionObserver" in window && sections.length) {
   const spy = new IntersectionObserver(
     (entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
-        links.forEach((link) => {
-          const active = link.getAttribute("href") === `#${entry.target.id}`;
-          if (active) link.dataset.active = "true";
-          else delete link.dataset.active;
-        });
+      /* Recomputed from the whole batch, not just the entry that changed: a
+         scroll back to the hero leaves every section outside the band, and
+         the stale link has to go with it. */
+      const current = entries.find((entry) => entry.isIntersecting);
+      links.forEach((link) => {
+        const active = current
+          ? link.getAttribute("href") === `#${current.target.id}`
+          : false;
+        if (active) link.dataset.active = "true";
+        else delete link.dataset.active;
       });
     },
     { rootMargin: "-45% 0px -50% 0px" },

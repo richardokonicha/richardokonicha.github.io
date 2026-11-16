@@ -31,6 +31,11 @@ export function initField(canvas: HTMLCanvasElement) {
   let frame = 0;
   let running = false;
 
+  /* Read once and honoured everywhere: under reduced motion the field is a
+     still drawing, not an animation. The observer below would otherwise call
+     start() the moment the canvas scrolls into view and undo it. */
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
   const speedGroup = document.querySelector<HTMLElement>("[data-speed-group]");
   const speedButtons = Array.from(
     document.querySelectorAll<HTMLButtonElement>("[data-speed]"),
@@ -60,7 +65,7 @@ export function initField(canvas: HTMLCanvasElement) {
   }
 
   function start() {
-    if (running) return;
+    if (running || still) return;
     running = true;
     frame = requestAnimationFrame(tick);
   }
@@ -78,6 +83,21 @@ export function initField(canvas: HTMLCanvasElement) {
     y = 0;
   }
 
+  /** Wipe and draw the whole cloud at once — the still version of `reset`+`start`. */
+  function settle() {
+    reset();
+    for (let i = 0; i < 6000; i += 1) paint();
+  }
+
+  /** Restart is the same gesture either way; only the motion differs. */
+  function restartField() {
+    if (still) settle();
+    else {
+      reset();
+      start();
+    }
+  }
+
   speedGroup?.addEventListener("click", (event) => {
     const button = (event.target as HTMLElement).closest<HTMLButtonElement>(
       "button[data-speed]",
@@ -89,19 +109,21 @@ export function initField(canvas: HTMLCanvasElement) {
       item.dataset.active = String(active);
       item.setAttribute("aria-pressed", String(active));
     });
+    if (still) settle();
   });
 
   restart?.addEventListener("click", () => {
-    reset();
-    start();
+    restartField();
   });
 
   canvas.addEventListener("click", () => {
-    reset();
-    start();
+    restartField();
   });
 
-  if ("IntersectionObserver" in window) {
+  if (still) {
+    /* no observer, no rAF: the drawing is the finished state */
+    settle();
+  } else if ("IntersectionObserver" in window) {
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -114,10 +136,5 @@ export function initField(canvas: HTMLCanvasElement) {
     observer.observe(canvas);
   } else {
     start();
-  }
-
-  if (matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    stop();
-    for (let i = 0; i < 6000; i += 1) paint();
   }
 }

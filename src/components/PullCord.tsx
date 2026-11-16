@@ -3,7 +3,7 @@
 import { useEffect, useRef } from "react";
 import type { CSSProperties, RefObject } from "react";
 
-import { clamp, spring, step, tune } from "@/lib/spring";
+import { clamp, reducedMotion, spring, step, tune } from "@/lib/spring";
 
 /**
  * Pull Cord — a lamp on a wire with a cord you can really pull.
@@ -144,8 +144,6 @@ export default function PullCord() {
     let W = 0;
     let H = 0;
 
-    const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
     const pts = Array.from({ length: N + 1 }, () => ({ x: 0, y: 0, vx: 0, vy: 0 }));
 
     const anchor = () => {
@@ -158,7 +156,9 @@ export default function PullCord() {
     const bulbAt = () => {
       const c = Math.cos(TH.x);
       const s = Math.sin(TH.x);
-      const y = WIRE + TUG.x + 42;
+      /* 53 = the bulb's own centre (top 38 + half of 30); the glow is cast from
+         here, so the clip circle has to open from the same point */
+      const y = WIRE + TUG.x + 53;
       return [W / 2 - y * s, y * c];
     };
 
@@ -301,7 +301,7 @@ export default function PullCord() {
     let idleTimer = 0;
     const scheduleIdle = () => {
       idleTimer = window.setTimeout(() => {
-        if (!still && performance.now() >= userUntil && !held && !ghost) {
+        if (!reducedMotion() && performance.now() >= userUntil && !held && !ghost) {
           pull(true);
           wake();
         }
