@@ -44,7 +44,7 @@ export default function Colophon() {
                   </span>
                   <span
                     aria-hidden="true"
-                    className="text-[0.8rem] text-rule transition-transform duration-[250ms] group-hover:translate-x-[2px] group-hover:-translate-y-[2px] group-hover:text-accent"
+                    className="text-[0.8rem] text-muted transition-transform duration-[250ms] group-hover:translate-x-[2px] group-hover:-translate-y-[2px] group-hover:text-accent"
                   >
                     ↗
                   </span>

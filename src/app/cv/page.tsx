@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { cx, reveal } from "@/lib/classes";
-import { cvFacts, entries, roles, site, social } from "@/lib/site";
+import { cvFacts, entries, formatDate, roles, site, social } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: "Résumé — Richard Okonicha",
@@ -103,7 +103,7 @@ export default function CvPage() {
                       {entry.title}
                     </span>
                     <span className="font-mono text-[0.62rem] tracking-[0.06em] text-muted uppercase">
-                      {entry.date}
+                      {formatDate(entry)}
                     </span>
                   </Tag>
                 </li>

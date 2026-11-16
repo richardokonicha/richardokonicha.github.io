@@ -22,8 +22,13 @@ export const nav = [
 export type EntryKind = "work" | "note";
 
 export interface Entry {
-  /** display date, newest first */
+  /**
+   * ISO `YYYY` or `YYYY-MM`. For a span, the end of it. Sorting is by this
+   * field, so the stream is newest-first no matter how the list is typed.
+   */
   date: string;
+  /** Start of the span, when the entry covers more than one period. */
+  since?: string;
   kind: EntryKind;
   title: string;
   summary: string;
@@ -31,7 +36,7 @@ export interface Entry {
   href?: string;
 }
 
-export const entries: Entry[] = [
+const log: Entry[] = [
   {
     date: "2026",
     kind: "work",
@@ -46,21 +51,24 @@ export const entries: Entry[] = [
     summary: "ROCm, k3s, device plugins, and the failure modes nobody documents.",
   },
   {
-    date: "2024–26",
+    date: "2026",
+    since: "2024",
     kind: "work",
     title: "InferenceCloud.ai",
     summary:
       "Multi-tenant AI writing platform for a Swiss team — queues, isolation, and a pipeline rebuilt for spikes.",
   },
   {
-    date: "2022–24",
+    date: "2024",
+    since: "2022",
     kind: "work",
     title: "Swell",
     summary:
       "Storefront theme engine and origin theme for a high-scale enterprise SaaS platform.",
   },
   {
-    date: "2020–22",
+    date: "2022",
+    since: "2020",
     kind: "work",
     title: "Cardagraph",
     summary:
@@ -75,12 +83,26 @@ export const entries: Entry[] = [
     href: "https://medium.com/@richardokonicha/understanding-python-your-baby-steps-a2949c17670e",
   },
   {
-    date: "2018–20",
+    date: "2020",
+    since: "2018",
     kind: "work",
     title: "eHealth4Everyone",
     summary: "Health data systems for government clients — OpenHisa, MSDAT.",
   },
 ];
+
+/** Newest first. ISO year strings sort lexicographically, which is chronological. */
+export const entries: Entry[] = [...log].sort((a, b) =>
+  a.date === b.date ? 0 : a.date < b.date ? 1 : -1,
+);
+
+/** `2024–26` for a span, the bare year otherwise. */
+export function formatDate(entry: Entry): string {
+  if (!entry.since) return entry.date;
+  const from = entry.since.slice(0, 4);
+  const to = entry.date.slice(0, 4);
+  return from === to ? entry.date : `${from}–${to.slice(2)}`;
+}
 
 /* ------------------------------------------------------------------ *
  * Plates — the visual end of the log. Each renders differently.
