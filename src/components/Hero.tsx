@@ -1,4 +1,3 @@
-import Dither from "@/components/Dither";
 import { cx, reveal } from "@/lib/classes";
 
 export default function Hero() {
@@ -7,7 +6,7 @@ export default function Hero() {
       id="top"
       className="flex min-h-svh items-center pt-[calc(var(--spacing-nav)_+_clamp(3rem,8vh,6rem))] pb-[clamp(3rem,8vh,6rem)] max-tb:min-h-0 max-tb:pt-32"
     >
-      <div className="wrap grid grid-cols-[minmax(0,1.25fr)_minmax(0,0.75fr)] items-center gap-[clamp(2rem,6vw,6rem)] max-tb:grid-cols-1 max-tb:gap-[3rem]">
+      <div className="wrap grid grid-cols-1 items-center">
         <div className="hero-copy">
           <p
             className={cx(
@@ -15,7 +14,7 @@ export default function Hero() {
               reveal,
             )}
           >
-            Lagos, Nigeria — Independent builder
+            Independent builder
           </p>
 
           <h1
@@ -69,32 +68,6 @@ export default function Hero() {
             </span>
           </div>
         </div>
-
-        <figure
-          className={cx(
-            "w-[min(100%,380px)] justify-self-end max-tb:w-[min(100%,320px)] max-tb:justify-self-start",
-            reveal,
-          )}
-        >
-          <Dither
-            src="/img/portrait.jpg"
-            alt="Portrait of Richard Okonicha"
-            width={760}
-            height={760}
-            size="md"
-            contrast={132}
-            brightness={1.02}
-            opacity={0.55}
-            hover={0.3}
-            eager
-            className="w-full"
-          />
-
-          <figcaption className="mt-[0.7rem] flex justify-between gap-[1rem] font-mono text-[0.64rem] tracking-[0.08em] text-muted uppercase">
-            <span>Richard Okonicha, Lagos</span>
-            <span>2026</span>
-          </figcaption>
-        </figure>
       </div>
     </section>
   );
