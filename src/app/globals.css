@@ -16,12 +16,22 @@
   --color-rule: #d5cbb8;
   --color-accent: #9c3d1a;
 
-  /* dark sections */
+  /* dark sections — these do *not* flip with the theme. The Plates recess is
+     always dark, so it needs its own fixed foreground; using `paper`/`ink`
+     there collapses to 1:1 the moment the theme inverts. */
   --color-dark: #12100d;
   --color-dark-2: #1a1713;
   --color-dark-muted: #a79d8e;
   --color-dark-rule: #332d25;
+  --color-dark-ink: #f4f0e6;
   --color-ember: #d06a3f;
+
+  /* A sheet of paper inside the dark recess. The particle field paints itself
+     #f4f0e6, so its margin — and anything sitting on that margin, like the
+     speed controls — has to stay light-theme colours whatever the theme does. */
+  --color-print: #f4f0e6;
+  --color-print-ink: #14110e;
+  --color-print-muted: #6b6257;
 
   /* the lamp's two rooms, deliberately immune to the theme switch: the lit
      room is always paper, the unlit room always ink, so the little scene
