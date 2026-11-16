@@ -3,82 +3,115 @@ import { reducedMotion } from "@/lib/spring";
 /**
  * The cover's field.
  *
- * A rule, not an illustration: one hairline sine drawn across the cover, and a
- * drift of particles the pointer leaves behind it. It never becomes the
- * subject — it sits under the name, in ink at a low alpha, and it stops the
- * moment nothing is happening.
+ * A random walk that never repeats itself, drawn behind the name.
  *
- * Three costs had to be kept down:
+ * The walk is **chaotic, not random**. P·01 used `Math.random()`, which is
+ * unreproducible but not mathematics — it is noise wearing a formula. This
+ * integrates the logistic map instead:
  *
- *  - **No idle loop.** The cover is a title page, so a rAF that ran forever
- *    would be motion to announce itself. A pointer sweep *adds* a fixed amount
- *    of particle life (`BUDGET_MAX`); every frame *spends* one unit. When the
- *    budget and the particles are both gone the loop stops, so a resting page
- *    runs zero frames — which is exactly what the QA motion suite asserts.
- *  - **No layout reads.** The canvas is a background, so the pointer is taken
- *    from `window` (`pointermove` fires there even though the canvas is
- *    `pointer-events-none`), and the size comes from a `ResizeObserver` plus
- *    `devicePixelRatio`, never from the scroll position.
+ *     x ← r·x·(1 − x),  r ≈ 3.99
+ *
+ * which is deterministic (a seed always yields the same path) and chaotic
+ * (nearby seeds diverge exponentially, so the path never repeats and cannot be
+ * predicted without the seed). The seed is mixed from the clock and the
+ * pointer, so no two visits draw the same cloud.
+ *
+ * Three costs are kept down:
+ *
+ *  - **No idle loop.** The cover is a title page. A pointer sweep wakes the
+ *    walk, each frame spends one unit of a fixed budget, and the loop stops
+ *    when the budget, the walkers and the cloud are all spent. A resting page
+ *    runs zero frames — the QA motion suite asserts it.
+ *  - **No layout reads.** The canvas is a background: `pointer-events: none`,
+ *    so the pointer comes from `window` and the copy stays selectable. Size
+ *    comes from a `ResizeObserver` and `devicePixelRatio`, never from scroll.
  *  - **No theme constants.** The ink is read from the live `--color-ink` token
- *    and re-read when `data-theme` flips, so a dark-mode visitor gets light
- *    dust and a swap never leaves a ghost of the old colour.
+ *    and re-read when `data-theme` flips, so a swap repaints instead of
+ *    leaving a ghost of the old colour.
+ *
+ * The cloud is a **trail of timed segments**, not an accumulation buffer. An
+ * accumulating canvas has to be faded with `destination-out`, and an 8-bit
+ * alpha channel stalls: a pixel at alpha 40 multiplied by 0.993 rounds back to
+ * 40 and never fades, so every sweep would leave a permanent stain. Keeping the
+ * segments and re-stroking them at an age-derived alpha fades exactly, costs
+ * six strokes a frame, and empties completely.
  */
 
-/** One unit of budget is one 60 Hz frame of particle life. */
+/** Control parameter: 3.99 is fully chaotic (the map never settles). */
+const R = 3.99;
+
+/** One unit of budget is one 60 Hz frame of walking. */
 const BUDGET_MAX = 9;
 /** Budget per pixel of deliberate travel beyond the jitter threshold. */
 const PER_PX = 0.09;
 /** Travel below this is jitter (the cord's idle tug shifts the page a few px).
     Ignoring it keeps the field asleep unless a hand really moved. */
 const MIN_TRAVEL = 16;
-/** A sweep has to move this far in total before the field wakes at all, so a
-    cursor resting under a gently swinging cord never starts it. */
+/** A sweep must travel this far before the walk wakes at all, so a cursor
+    resting under a gently swinging cord never starts it. */
 const ARM_TRAVEL = 120;
-/** Once armed, the field keeps painting for this long after the last real
-    movement. It is a ceiling, not a target: a slow drift dies sooner because
-    the budget runs out first. */
-const TAIL_MS = 340;
 /** Travel is capped per event so a teleporting cursor cannot flood the field. */
 const MAX_TRAVEL = 160;
-const MAX_PARTICLES = 260;
-/** Particles seeded per frame while budget remains. */
-const PER_FRAME = 4;
-/** Peak alpha of one particle's streak. A field this light still has to be
-    seen against paper, so the peak sits near a hairline's weight. */
-const PARTICLE_ALPHA = 0.5;
-/** Where the sine's still line rides, as a fraction of the cover's height. */
+
+/** Walkers alive at once. */
+const MAX_WALKERS = 5;
+/** Steps integrated per frame, per walker — the walk's speed. */
+const STEPS = 7;
+/** Step length in px; the walk's stride. */
+const STRIDE = 5.5;
+/** The chaotic state is nudged toward the pointer, so the walk heads where
+    the hand went instead of wandering off. 0 = pure walk, 1 = pure homing. */
+const STEER = 0.06;
+
+/** A segment fades out over this long, then is dropped. Four seconds is long
+    enough to watch the cloud evaporate and short enough that the loop sleeps
+    again without the visitor noticing it stop. */
+const FADE_MS = 4000;
+/** The fade is quantised into this many alpha steps, one stroke each. Six is
+    invisible as banding and keeps the frame to six strokes. */
+const BUCKETS = 6;
+/** Alpha of the newest segments. */
+const CLOUD_ALPHA = 0.5;
+/** The reduced-motion still frame is drawn at this fraction of that. */
+const STILL_STRENGTH = 0.4;
+
+/** Where the walk's still line rides, as a fraction of the cover's height. */
 const BASELINE = 0.9;
+/** The walk's band: the open lower part of the cover. It bounces off both
+    edges, so a cloud can never drift up under the name. */
+const FIELD_BOTTOM = 0.94;
 /** Pointer travel above this line is reading, not drawing, and is ignored.
     The nav and the pull cord live in that band, so their motion cannot wake
     the field — only a hand in the open lower half can. */
-const FIELD_TOP = 0.48;
-/** How much of the pointer's recent path the wake keeps re-seeding, and for
+const POINTER_TOP = 0.48;
+/** How much of the pointer's recent path keeps re-seeding the walk, and for
     how long. This is what turns a dot into a trail. */
-const TRACE_MS = 160;
+const TRACE_MS = 170;
 const TRACE_POINTS = 12;
 
-interface Particle {
+interface Walker {
+  /** Position in CSS px. */
   x: number;
   y: number;
-  vx: number;
-  vy: number;
+  /** Logistic state in (0, 1). */
+  u: number;
+  /** Heading, so the step has a direction as well as a distance. */
+  angle: number;
+  /** Frames lived, against `life`. */
   age: number;
   life: number;
-  seed: number;
+}
+
+/** One frame's worth of walk, flat as [x1, y1, x2, y2, …] in CSS px. */
+interface Trail {
+  at: number;
+  segs: number[];
 }
 
 /** Deterministic hash — the still frame is identical on every visit. */
 function hash(n: number) {
   const s = Math.sin(n * 127.1 + 311.7) * 43_758.5453;
   return s - Math.floor(s);
-}
-
-/** A cheap, smooth flow field: the heading a particle drifts toward. */
-function flow(x: number, y: number, t: number) {
-  return (
-    Math.sin(x * 0.0021 + t * 0.00007) * 1.7 +
-    Math.cos(y * 0.0027 - t * 0.00005) * 1.7
-  );
 }
 
 /** `#rrggbb` → `"r, g, b"`, with a fallback for an unexpected token value. */
@@ -96,6 +129,11 @@ function hexToRgb(hex: string): string {
   return `${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}`;
 }
 
+/** One logistic step. `u` stays in (0, 1) for r = 3.99. */
+function next(u: number) {
+  return R * u * (1 - u);
+}
+
 export function initField(canvas: HTMLCanvasElement) {
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -107,9 +145,12 @@ export function initField(canvas: HTMLCanvasElement) {
   let width = 1;
   let height = 1;
 
-  let particles: Particle[] = [];
-  /** Recent pointer positions, so the wake seeds along the path travelled. */
+  let walkers: Walker[] = [];
+  /** Recent pointer positions, so the walk keeps heading where the hand went. */
   const trace: { x: number; y: number; at: number }[] = [];
+  /** The cloud: one entry per frame that drew, oldest first. */
+  let trail: Trail[] = [];
+
   let raf = 0;
   let last = 0;
   let time = 0;
@@ -119,15 +160,27 @@ export function initField(canvas: HTMLCanvasElement) {
   /** 0 until the pointer has travelled far enough to count as a hand. */
   let armed = 0;
   let charge = 0;
-  /** Timestamp of the last deliberate movement, for the hold. */
-  let held = 0;
   let hasPointer = false;
   let px = 0;
   let py = 0;
 
+  /* The chaotic seed. Anything that differs between visits will do: the clock
+     alone is enough, and mixing in the first pointer position means a reload
+     and a return draw different clouds even within the same millisecond. */
+  let seed = (Date.now() ^ (Math.random() * 0xffffffff)) >>> 0;
+
   /* The ink and the rule's strength, both from live tokens. */
   let inkRgb = "20, 17, 14";
   let ruleAlpha = 0.14;
+
+  /* ---- the cloud buffer ---------------------------------------------- *
+   * Half resolution: the cloud is a wash, so the extra pixels buy nothing
+   * and cost a quarter of the fill. Segments are stored in CSS px and scaled
+   * once, here.
+   * -------------------------------------------------------------------- */
+
+  const cloud = document.createElement("canvas");
+  const cc = cloud.getContext("2d");
 
   const readPalette = () => {
     const s = getComputedStyle(document.documentElement);
@@ -135,6 +188,15 @@ export function initField(canvas: HTMLCanvasElement) {
     /* A dark room needs a slightly stronger rule to read at all. */
     ruleAlpha = document.documentElement.dataset.theme === "dark" ? 0.22 : 0.14;
   };
+
+  /** Bottom edge of the hero name in CSS px, cached on resize so font loading
+    shifts don't move the field boundary. */
+  let heroBottomY = 0;
+  const measureHeroBottom = () => {
+    const name = document.querySelector<HTMLElement>("[data-pretext-lines]");
+    heroBottomY = name ? name.getBoundingClientRect().bottom : height * POINTER_TOP;
+  };
+  const heroBottom = () => heroBottomY;
 
   /* ---- sizing -------------------------------------------------------- */
 
@@ -148,16 +210,27 @@ export function initField(canvas: HTMLCanvasElement) {
     canvas.style.width = `${width}px`;
     canvas.style.height = `${height}px`;
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+    cloud.width = Math.max(1, Math.round((width * dpr) / 2));
+    cloud.height = Math.max(1, Math.round((height * dpr) / 2));
+
+    /* Font loading can shift the hero; re-measure so the field boundary
+       follows the layout, not a stale measurement. */
+    measureHeroBottom();
+
     if (still) drawStill();
     else {
+      /* Resizing reallocates the canvas, so the cloud is dropped with it. */
+      trail = [];
+      walkers = [];
       c.clearRect(0, 0, width, height);
       paintStatic();
     }
   };
 
   /* ---- the still layer ---------------------------------------------- *
-   * A baseline rule and one sine. Repainted on resize and after every
-   * particle frame (which clears the canvas), so it never accumulates.
+   * A baseline rule and one sine. Repainted on resize and after every walk
+   * frame (which clears the canvas), so it never accumulates.
    * ------------------------------------------------------------------ */
 
   function paintStatic() {
@@ -176,7 +249,7 @@ export function initField(canvas: HTMLCanvasElement) {
     c.lineTo(width, baseline);
     c.stroke();
 
-    /* One sine riding the rule: the only mark on an untouched cover. */
+    /* One sine, sampled every 2px: the only mark on an untouched cover. */
     const amp = Math.min(26, height * 0.038);
     c.strokeStyle = `rgba(${inkRgb}, ${ruleAlpha * 0.8})`;
     c.beginPath();
@@ -188,28 +261,39 @@ export function initField(canvas: HTMLCanvasElement) {
     c.stroke();
   }
 
-  /* ---- particles ----------------------------------------------------- */
+  /* ---- the walk ------------------------------------------------------ */
 
-  function spawn(x: number, y: number, scatter = 9) {
-    if (particles.length >= MAX_PARTICLES) return;
-    const angle = flow(x, y, time) + (Math.random() - 0.5) * 0.9;
-    const speed = 0.22 + Math.random() * 0.5;
-    const a = Math.random() * Math.PI * 2;
-    const r = Math.random() * scatter;
-    particles.push({
-      x: x + Math.cos(a) * r,
-      y: y + Math.sin(a) * r,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
+  /** Where the walkers should head: the newest point on the pointer's path
+      still inside the trace window. Walked backwards, so the common case
+      (the newest point is fresh) costs one comparison. */
+  function target() {
+    const now = performance.now();
+    for (let i = trace.length - 1; i >= 0; i -= 1) {
+      const p = trace[i]!;
+      if (now - p.at <= TRACE_MS) return p;
+    }
+    return null;
+  }
+
+  function spawn(x: number, y: number) {
+    if (walkers.length >= MAX_WALKERS) return;
+    const top = heroBottom() + 2;
+    if (y < top) y = top;
+    /* Each walker gets its own seed derived from the master seed and its
+       birth position, so five walkers never retrace one another. */
+    let u = (seed ^ Math.round(x * 31 + y * 17)) >>> 0;
+    u = (u + 1) / 0x100000000;
+    walkers.push({
+      x,
+      y,
+      u,
+      angle: (u * Math.PI * 2) % (Math.PI * 2),
       age: 0,
-      life: 70 + Math.random() * 90,
-      seed: Math.random(),
+      life: 70 + hash(u * 91.7) * 90,
     });
   }
 
-  /** The pointer leaves a wake. That wake is the only input.
-      `localY` is the position inside the canvas; `onPointerMove` has already
-      discarded anything above the field's band. */
+  /** The pointer leaves a wake. That wake is the only input. */
   function emit(x: number, localY: number) {
     if (still) return;
     const gap = hasPointer ? Math.hypot(x - px, localY - py) : 0;
@@ -225,147 +309,221 @@ export function initField(canvas: HTMLCanvasElement) {
     if (!armed) {
       charge += travel;
       if (charge < ARM_TRAVEL) return;
-      /* Crossing the threshold arms the field for good; the charge is spent
+      /* Crossing the threshold arms the walk for good; the charge is spent
          and only a deliberate sweep can wake it again. */
       armed = 1;
       charge = 0;
       budget = BUDGET_MAX;
     }
-    held = performance.now();
+    const now = performance.now();
     budget = Math.min(BUDGET_MAX, budget + (travel - MIN_TRAVEL) * PER_PX);
-    /* Remember the path so the wake keeps seeding along it for a few frames,
-       rather than only at wherever the cursor stopped. */
-    trace.push({ x, y: localY, at: held });
-    while (trace.length > 0 && held - trace[0]!.at > TRACE_MS) trace.shift();
+
+    /* Remember the path so the walk keeps heading along it for a few frames,
+       rather than only toward wherever the cursor stopped. */
+    trace.push({ x, y: localY, at: now });
+    while (trace.length > 0 && now - trace[0]!.at > TRACE_MS) trace.shift();
     if (trace.length > TRACE_POINTS) trace.splice(0, trace.length - TRACE_POINTS);
+
+    /* A fresh seed each event, so no two visits or two sweeps repeat. */
+    seed = (seed * 1664525 + 1013904223) >>> 0;
     wake();
   }
 
-  function stepParticles(dt: number) {
-    c.clearRect(0, 0, width, height);
-    paintStatic();
+  /** Advance every walker, bouncing it inside the field's band, and return the
+      frame's segments. Dead walkers are removed. */
+  function walk(dt: number): number[] {
+    if (walkers.length === 0) return [];
+    const segs: number[] = [];
+    /** The cloud is drawn at half resolution; a 1px stroke there covers 2px
+        when stretched. Keep the path 2px below the hero so the stroke's
+        upper half kisses the text but never crosses it. */
+    const top = heroBottom() + 2;
+    const bottom = height * FIELD_BOTTOM;
+    const aim = target();
 
-    /* The budget seeds at a steady rate along the recent path, so a fast
-       sweep and a slow one both read as a trail rather than a burst. */
-    if (budget > 0) {
-      const now = performance.now();
-      const live = trace.filter((p) => now - p.at <= TRACE_MS);
-      const points = live.length > 0 ? live : [{ x: px, y: py, at: now }];
-      /* Spread the budget across the path, so a short flick draws a short
-         streak and a long sweep draws a long one. */
-      const share = Math.max(1, Math.min(PER_FRAME, Math.ceil(budget)));
-      for (let i = 0; i < share; i += 1) {
-        const p = points[Math.floor((i / share) * points.length)] ?? points[0]!;
-        spawn(p.x, p.y, 10);
-      }
-    }
-
-    /* One path per alpha bucket, so the whole field costs a handful of draw
-       calls however many particles are alive. */
-    const buckets = new Map<number, Path2D>();
-    for (let i = particles.length - 1; i >= 0; i -= 1) {
-      const p = particles[i]!;
-      const angle = flow(p.x, p.y, time);
-      p.vx += (Math.cos(angle) - p.vx) * 0.035;
-      p.vy += (Math.sin(angle) - p.vy) * 0.035;
-      const nx = p.x + p.vx * dt * 0.06;
-      const ny = p.y + p.vy * dt * 0.06;
-      p.x = nx;
-      p.y = ny;
-      p.age += dt * 0.06;
-
-      const left = 1 - p.age / p.life;
-      if (left <= 0 || nx < -24 || nx > width + 24 || ny < -24 || ny > height + 24) {
-        particles.splice(i, 1);
+    for (let i = walkers.length - 1; i >= 0; i -= 1) {
+      const w = walkers[i]!;
+      w.age += dt * 0.06;
+      if (w.age > w.life) {
+        walkers.splice(i, 1);
         continue;
       }
-      /* In over the first tenth, out over the rest. */
-      const alpha = Math.min(1, p.age / 10) * Math.pow(left, 0.7) * (0.5 + p.seed * 0.5);
-      /* A streak smeared across the pixel grid: a hairline landing on a
-         half-pixel antialiases to a third of its alpha, so both offsets are
-         drawn and the pair reads as one line. */
-      const tail = 1.4 + p.seed * 2;
-      const tx = p.x - p.vx * tail;
-      const ty = p.y - p.vy * tail;
-      const key = Math.round(alpha * 5) / 5;
-      let path = buckets.get(key);
-      if (!path) {
-        path = new Path2D();
-        buckets.set(key, path);
+
+      /* Chaotic steps, with a gentle pull toward the pointer so the cloud
+         gathers where the hand went instead of drifting off-screen. */
+      for (let s = 0; s < STEPS; s += 1) {
+        const u = next(w.u);
+        w.angle += (u - 0.5) * 2.4;
+        const nx = w.x + Math.cos(w.angle) * STRIDE;
+        const ny = w.y + Math.sin(w.angle) * STRIDE;
+        w.u = u;
+
+        let x = nx + (aim ? (aim.x - nx) * STEER : 0);
+        let y = ny + (aim ? (aim.y - ny) * STEER : 0);
+
+        /* Bounce off the edges of the band. Without this a walker drifts
+           off-canvas and the cloud gathers in one corner; with it the walk
+           stays in the open lower half, under the name. */
+        let angle = w.angle;
+        if (x < 0 || x > width) {
+          angle = Math.PI - angle;
+          x = Math.min(Math.max(x, 0), width);
+        }
+        if (y < top || y > bottom) {
+          angle = -angle;
+          y = Math.min(Math.max(y, top), bottom);
+        }
+        w.angle = angle;
+
+        segs.push(w.x, w.y, x, y);
+        w.x = x;
+        w.y = y;
       }
-      /* Three passes, each nudged half a pixel vertically: a one-pixel
-         hairline that lands between two pixel rows antialiases to a third of
-         its alpha, so both neighbours are drawn and the streak reads as one
-         solid line. */
-      path.moveTo(tx, ty);
-      path.lineTo(nx, ny);
-      path.moveTo(tx, ty - 0.5);
-      path.lineTo(nx, ny - 0.5);
-      path.moveTo(tx, ty + 0.5);
-      path.lineTo(nx, ny + 0.5);
+    }
+    return segs;
+  }
+
+  /** Re-stroke the cloud: drop expired frames, then draw the rest in quantised
+      alpha buckets so the whole fade costs six strokes. */
+  function paintCloud(now: number, strength: number) {
+    if (!cc) return;
+    cc.clearRect(0, 0, cloud.width, cloud.height);
+    if (trail.length === 0) return;
+
+    /* Entries are in time order, so expiry is a prefix. */
+    let cut = 0;
+    while (cut < trail.length && now - trail[cut]!.at > FADE_MS) cut += 1;
+    if (cut > 0) trail.splice(0, cut);
+    if (trail.length === 0) return;
+
+    const scale = cloud.width / Math.max(1, width);
+    const paths: Path2D[] = [];
+    const used: boolean[] = [];
+    for (let b = 0; b < BUCKETS; b += 1) {
+      paths.push(new Path2D());
+      used.push(false);
     }
 
-    c.lineWidth = 1;
-    c.lineCap = "butt";
-    for (const [alpha, path] of buckets) {
-      c.strokeStyle = `rgba(${inkRgb}, ${(alpha * PARTICLE_ALPHA).toFixed(2)})`;
-      c.stroke(path);
+    for (const g of trail) {
+      /* 1 at birth, 0 at FADE_MS. */
+      const life = 1 - (now - g.at) / FADE_MS;
+      let b = Math.floor(life * BUCKETS);
+      if (b < 0) b = 0;
+      else if (b > BUCKETS - 1) b = BUCKETS - 1;
+      const path = paths[b]!;
+      const s = g.segs;
+      for (let i = 0; i < s.length; i += 4) {
+        path.moveTo(s[i]! * scale, s[i + 1]! * scale);
+        path.lineTo(s[i + 2]! * scale, s[i + 3]! * scale);
+      }
+      used[b] = true;
+    }
+
+    cc.lineWidth = 1;
+    cc.lineCap = "butt";
+    for (let b = 0; b < BUCKETS; b += 1) {
+      if (!used[b]) continue;
+      const a = ((b + 1) / BUCKETS) * CLOUD_ALPHA * strength;
+      cc.strokeStyle = `rgba(${inkRgb}, ${a.toFixed(3)})`;
+      cc.stroke(paths[b]!);
     }
   }
 
-  /** Under reduced motion the field is a finished drawing, not a loop. */
+  function stepWalk(dt: number, now: number) {
+    c.clearRect(0, 0, width, height);
+    paintStatic();
+
+    const aim = target();
+    if (budget > 0 && aim) spawn(aim.x, aim.y);
+
+    const segs = walk(dt);
+    if (segs.length > 0) trail.push({ at: now, segs });
+
+    paintCloud(now, 1);
+    c.drawImage(cloud, 0, 0, width, height);
+  }
+
+  /** Under reduced motion the walk is a finished drawing, not a loop: one
+      long chaotic walk, laid down once, from the seed. */
   function drawStill() {
     c.clearRect(0, 0, width, height);
     paintStatic();
-    /* The still version is the same drawing the pointer would have made: a
-       scatter spread evenly across the field's band, thickest along the
-       baseline, at the same weight as a wake. */
-    const dots = Math.min(900, Math.round((width * height) / 3600));
-    for (let i = 0; i < dots; i += 1) {
-      const x = Math.round(hash(i * 1.7) * width);
-      /* Squared distribution packs the dots toward the foot of the band. */
-      const t = hash(i * 3.1 + 7) ** 2;
-      const y = Math.round(height * (FIELD_TOP + (BASELINE + 0.02 - FIELD_TOP) * t));
-      const a = 0.1 + hash(i * 5.3) * 0.28;
-      const len = 1 + Math.round(hash(i * 9.1) * 3);
-      c.fillStyle = `rgba(${inkRgb}, ${a.toFixed(2)})`;
-      c.fillRect(x, y, len, 1);
+    if (!cc) return;
+
+    const scale = cloud.width / Math.max(1, width);
+    const segs: number[] = [];
+    const top = heroBottom() + 2;
+    const bottom = height * FIELD_BOTTOM;
+
+    let u = ((seed % 1000) / 1000 + 0.001) % 1;
+    let x = width * 0.12;
+    let y = Math.max(top + (bottom - top) * 0.6, top);
+    let angle = 0;
+
+    for (let i = 0; i < 2600; i += 1) {
+      u = next(u);
+      angle += (u - 0.5) * 2.4;
+      const nx = x + Math.cos(angle) * STRIDE;
+      const ny = y + Math.sin(angle) * STRIDE;
+      if (nx < 0 || nx > width) {
+        angle = Math.PI - angle;
+        x = Math.min(Math.max(nx, 0), width);
+      } else x = nx;
+      if (ny < top || ny > bottom) {
+        angle = -angle;
+        y = Math.min(Math.max(ny, top), bottom);
+      } else y = ny;
+      segs.push(x - Math.cos(angle) * STRIDE, y - Math.sin(angle) * STRIDE, x, y);
     }
+
+    const now = performance.now();
+    trail = [{ at: now, segs }];
+    paintCloud(now, STILL_STRENGTH);
+    c.drawImage(cloud, 0, 0, width, height);
+    trail = [];
   }
 
   /* ---- the loop ------------------------------------------------------ */
 
   const awake = () =>
-    !still &&
-    inView &&
-    (budget > 0 || (held > 0 && performance.now() - held < TAIL_MS && particles.length > 0));
+    !still && inView && (budget > 0 || walkers.length > 0 || trail.length > 0);
+
+  const settle = () => {
+    /* Nothing left to draw: drop the cloud so a later sweep starts from the
+       finished drawing instead of from a ghost of this one. */
+    trail = [];
+    walkers = [];
+    charge = 0;
+    cc?.clearRect(0, 0, cloud.width, cloud.height);
+    paintStatic();
+    delete canvas.dataset.awake;
+  };
 
   const tick = (now: number) => {
     const dt = last ? Math.min(now - last, 48) : 16.7;
     last = now;
     time += dt;
-    /* The budget is spent per frame, so the loop's length is bounded however
-       much the pointer swept through; the hold only sets a ceiling. */
+    /* Spent per frame, so the loop's length is bounded however much the
+       pointer swept through. */
     budget = Math.max(0, budget - 1);
-    const holding = held > 0 && now - held < TAIL_MS;
-    stepParticles(dt);
+    stepWalk(dt, now);
 
-    if (budget > 0 || (holding && particles.length > 0)) {
+    if (awake() && inView) {
       raf = requestAnimationFrame(tick);
     } else {
       raf = 0;
       last = 0;
-      particles = [];
-      held = 0;
-      charge = 0;
-      /* Land on the finished drawing rather than an empty canvas. */
-      paintStatic();
+      settle();
     }
   };
 
   const wake = () => {
     if (raf === 0 && awake()) {
       last = 0;
+      /* A machine-readable "the field is walking" flag. The QA motion suite
+         asserts on this rather than on the global rAF count, because the pull
+         cord has an idle tug of its own that has nothing to do with the field. */
+      canvas.dataset.awake = "1";
       raf = requestAnimationFrame(tick);
     }
   };
@@ -378,15 +536,16 @@ export function initField(canvas: HTMLCanvasElement) {
     const rect = canvas.getBoundingClientRect();
     if (rect.height <= 0) return;
     const localY = event.clientY - rect.top;
+    const x = event.clientX - rect.left;
     /* Only the open lower part of the cover counts: a hand over the name or
        the nav is reading, not drawing, and must not disturb the field. */
-    if (localY / rect.height < FIELD_TOP) {
-      px = event.clientX - rect.left;
+    if (localY < heroBottom()) {
+      px = x;
       py = localY;
       hasPointer = true;
       return;
     }
-    emit(event.clientX - rect.left, localY);
+    emit(x, localY);
   };
 
   const onPointerLeave = () => {
@@ -400,7 +559,9 @@ export function initField(canvas: HTMLCanvasElement) {
       drawStill();
       return;
     }
-    if (particles.length === 0) {
+    if (walkers.length === 0) {
+      trail = [];
+      cc?.clearRect(0, 0, cloud.width, cloud.height);
       c.clearRect(0, 0, width, height);
       paintStatic();
     }
@@ -411,6 +572,7 @@ export function initField(canvas: HTMLCanvasElement) {
     cancelAnimationFrame(raf);
     raf = 0;
     last = 0;
+    delete canvas.dataset.awake;
   };
 
   /* ---- lifecycle ----------------------------------------------------- */
@@ -418,51 +580,65 @@ export function initField(canvas: HTMLCanvasElement) {
   readPalette();
   resize();
 
-  const teardown = () => {
-    cancelAnimationFrame(raf);
-    window.removeEventListener("pointermove", onPointerMove);
-    window.removeEventListener("pointerleave", onPointerLeave);
-    window.removeEventListener("resize", resize);
-    document.removeEventListener("visibilitychange", onVisibility);
-  };
-
-  if (still) {
-    /* No observer, no rAF, no listeners: the drawing is the finished state. */
-    return teardown;
-  }
-
-  window.addEventListener("pointermove", onPointerMove, { passive: true });
-  window.addEventListener("pointerleave", onPointerLeave, { passive: true });
-  window.addEventListener("resize", resize, { passive: true });
-  if ("ResizeObserver" in window) new ResizeObserver(resize).observe(host);
-
-  if ("IntersectionObserver" in window) {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        inView = entry?.isIntersecting ?? true;
-        if (inView) return;
-        cancelAnimationFrame(raf);
-        raf = 0;
-        last = 0;
-        paintStatic();
-      },
-      { threshold: 0.01 },
-    );
-    observer.observe(host);
-  }
-
-  document.addEventListener("visibilitychange", onVisibility);
-
-  /* A theme swap changes the ink, so the palette is re-read. The pull cord
-     flips `data-theme`; observing it is cheaper than importing the cord. */
+  /* The ink changes with the theme, so the palette is re-read. The pull cord
+     flips `data-theme` on <html>; observing it is cheaper than importing the
+     cord, and it works on both paths. */
   const themeObserver = new MutationObserver(onThemeChange);
   themeObserver.observe(document.documentElement, {
     attributes: true,
     attributeFilter: ["data-theme"],
   });
 
-  return () => {
-    teardown();
+  /* A resize reallocates the canvas, so the still frame has to be redrawn on
+     both paths — otherwise a window resize under reduced motion blanks it. */
+  window.addEventListener("resize", resize, { passive: true });
+  const sizeObserver =
+    "ResizeObserver" in window ? new ResizeObserver(resize) : null;
+  sizeObserver?.observe(host);
+
+  /* Nothing outside the cover needs to know it exists; stop walking when it
+     scrolls away. */
+  let observer: IntersectionObserver | null = null;
+
+  const teardown = () => {
+    cancelAnimationFrame(raf);
+    window.removeEventListener("pointermove", onPointerMove);
+    window.removeEventListener("pointerleave", onPointerLeave);
+    window.removeEventListener("resize", resize);
+    document.removeEventListener("visibilitychange", onVisibility);
     themeObserver.disconnect();
+    sizeObserver?.disconnect();
+    observer?.disconnect();
+    delete canvas.dataset.awake;
   };
+
+  if (still) {
+    /* No rAF and no pointer listeners: the drawing is the finished state. */
+    return teardown;
+  }
+
+  window.addEventListener("pointermove", onPointerMove, { passive: true });
+  window.addEventListener("pointerleave", onPointerLeave, { passive: true });
+  document.addEventListener("visibilitychange", onVisibility);
+
+  if ("IntersectionObserver" in window) {
+    observer = new IntersectionObserver(
+      ([entry]) => {
+        inView = entry?.isIntersecting ?? true;
+        if (inView) return;
+        cancelAnimationFrame(raf);
+        raf = 0;
+        last = 0;
+        trail = [];
+        walkers = [];
+        cc?.clearRect(0, 0, cloud.width, cloud.height);
+        paintStatic();
+        delete canvas.dataset.awake;
+      },
+      { threshold: 0.01 },
+    );
+    observer.observe(host);
+  }
+
+  return teardown;
 }
