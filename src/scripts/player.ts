@@ -1,4 +1,4 @@
-import { tracks } from "../data/site";
+import { tracks } from "@/lib/site";
 
 const VOLUME_KEY = "ro-volume";
 const DEFAULT_VOLUME = 0.6;
