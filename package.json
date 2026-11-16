@@ -8,7 +8,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "og": "node scripts/og.mjs",
+    "qa": "node scripts/qa/run.mjs"
   },
   "dependencies": {
     "class-variance-authority": "^0.7.1",

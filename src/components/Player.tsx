@@ -144,6 +144,7 @@ interface Engine {
   playing: boolean;
   held: boolean;
   barDrag: boolean;
+  volDrag: boolean;
   pointerId: number | null;
   visible: boolean;
   reduced: boolean;
@@ -166,6 +167,7 @@ function createEngine(duration: number, playing: boolean): Engine {
     playing,
     held: false,
     barDrag: false,
+    volDrag: false,
     pointerId: null,
     visible: true,
     reduced: false,
@@ -447,6 +449,7 @@ export default function Player() {
 
   const [playing, setPlaying] = React.useState(false);
   const [muted, setMuted] = React.useState(false);
+  const [volume, setVolume] = React.useState(DEFAULT_VOLUME);
   const [clock, setClock] = React.useState<{ s: number; dir: 1 | -1 }>({
     s: 0,
     dir: 1,
@@ -460,6 +463,7 @@ export default function Player() {
   const discRef = React.useRef<HTMLDivElement>(null);
   const fillRef = React.useRef<HTMLDivElement>(null);
   const railRef = React.useRef<HTMLDivElement>(null);
+  const volRef = React.useRef<HTMLDivElement>(null);
   const rpmRef = React.useRef<HTMLSpanElement>(null);
   const barRefs = React.useRef<(HTMLSpanElement | null)[]>([]);
   const audioRef = React.useRef<HTMLAudioElement | null>(null);
@@ -517,7 +521,13 @@ export default function Player() {
     const media = audioRef.current;
 
     if (media) {
-      media.volume = Number(readStore(VOL_KEY) ?? DEFAULT_VOLUME) || 0;
+      /* `Number(null)` is 0, so an unset key has to be caught before it is
+         coerced — otherwise every first visit would start silent. */
+      const stored = readStore(VOL_KEY);
+      const initial =
+        stored === null ? DEFAULT_VOLUME : clamp(Number(stored) || 0, 0, 1);
+      media.volume = initial;
+      setVolume(initial);
       const savedMute = readStore(MUTE_KEY) === "1";
       media.muted = savedMute;
       setMuted(savedMute);
@@ -814,11 +824,76 @@ export default function Player() {
     if (audio) {
       audio.muted = next;
       if (!next && audio.volume === 0) {
+        /* unmuting a deck at zero is a silent no-op: restore an audible level */
         audio.volume = DEFAULT_VOLUME;
+        setVolume(DEFAULT_VOLUME);
         writeStore(VOL_KEY, String(DEFAULT_VOLUME));
       }
     }
     writeStore(MUTE_KEY, next ? "1" : "0");
+  };
+
+  /* ---- volume ---- */
+  const applyVolume = (value: number) => {
+    const v = clamp(value, 0, 1);
+    setVolume(v);
+    writeStore(VOL_KEY, String(v));
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.volume = v;
+    /* a level above silence is an explicit unmute */
+    if (v > 0 && audio.muted) {
+      audio.muted = false;
+      setMuted(false);
+      writeStore(MUTE_KEY, "0");
+    }
+  };
+
+  const volumeFromPointer = (clientX: number) => {
+    const rail = volRef.current;
+    if (!rail) return;
+    const rect = rail.getBoundingClientRect();
+    if (rect.width > 0) applyVolume((clientX - rect.left) / rect.width);
+  };
+
+  const onVolDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    const e = engineRef.current;
+    if (!e || event.button !== 0 || e.pointerId !== null) return;
+    e.pointerId = event.pointerId;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    e.volDrag = true;
+    volumeFromPointer(event.clientX);
+  };
+
+  const onVolMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const e = engineRef.current;
+    if (e?.volDrag && e.pointerId === event.pointerId) volumeFromPointer(event.clientX);
+  };
+
+  const onVolUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    const e = engineRef.current;
+    if (!e?.volDrag || e.pointerId !== event.pointerId) return;
+    e.pointerId = null;
+    e.volDrag = false;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+  };
+
+  const onVolKey = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    const step = event.shiftKey ? 0.1 : 0.05;
+    const targets: Record<string, number> = {
+      ArrowRight: volume + step,
+      ArrowUp: volume + step,
+      ArrowLeft: volume - step,
+      ArrowDown: volume - step,
+      Home: 0,
+      End: 1,
+    };
+    const target = targets[event.key];
+    if (target === undefined) return;
+    event.preventDefault();
+    applyVolume(target);
   };
 
   /* ---- disc scrubbing ---- */
@@ -969,9 +1044,9 @@ export default function Player() {
       ArrowUp: e.time + SEEK_STEP,
       ArrowLeft: e.time - SEEK_STEP,
       ArrowDown: e.time - SEEK_STEP,
-      Home: 0,
-      End: e.duration - 1,
-    };
+        Home: 0,
+        End: e.duration,
+      };
     const target = targets[event.key];
     if (target === undefined) return;
     event.preventDefault();
@@ -1020,7 +1095,7 @@ export default function Player() {
                 {Array.from({ length: BAR_COUNT }, (_, i) => (
                   <span
                     className="h-full w-[3px] origin-bottom rounded-[1px] bg-accent"
-                    // biome-ignore lint/suspicious/noArrayIndexKey: fixed set of bars
+                    // a fixed set of bars, so the index is stable
                     key={i}
                     ref={(node) => {
                       barRefs.current[i] = node;
@@ -1046,10 +1121,14 @@ export default function Player() {
                 )}
               </button>
             </div>
-            <h2 className="mt-2 truncate font-serif text-[1.05rem] leading-tight">
-              {track.title}
-            </h2>
-            <p className="truncate text-[0.8rem] text-muted">{track.artist}</p>
+            {/* Auto-advance changes the deck under the listener; announce the new
+                record once, not every second. */}
+            <div aria-live="polite" aria-atomic="true">
+              <h2 className="mt-2 truncate font-serif text-[1.05rem] leading-tight">
+                {track.title}
+              </h2>
+              <p className="truncate text-[0.8rem] text-muted">{track.artist}</p>
+            </div>
             <span
               className="mt-1.5 inline-block font-mono text-[0.62rem] text-muted tabular-nums"
               ref={rpmRef}
@@ -1120,6 +1199,31 @@ export default function Player() {
           <Button aria-label="Next track" onClick={next} size="icon" variant="ghost">
             <SkipForward aria-hidden="true" className="size-4" fill="currentColor" />
           </Button>
+        </div>
+
+        <div
+          aria-label="Volume"
+          aria-valuemax={100}
+          aria-valuemin={0}
+          aria-valuenow={Math.round(volume * 100)}
+          aria-valuetext={muted ? "muted" : `${Math.round(volume * 100)}%`}
+          className="-my-1.5 cursor-pointer touch-none py-1.5 outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+          data-no-drag=""
+          onKeyDown={onVolKey}
+          onLostPointerCapture={onVolUp}
+          onPointerCancel={onVolUp}
+          onPointerDown={onVolDown}
+          onPointerMove={onVolMove}
+          onPointerUp={onVolUp}
+          role="slider"
+          tabIndex={0}
+        >
+          <div className="h-0.5 overflow-hidden rounded-full bg-rule" ref={volRef}>
+            <div
+              className="h-full w-full origin-left bg-muted"
+              style={{ transform: `scaleX(${muted ? 0 : volume})` }}
+            />
+          </div>
         </div>
       </Card>
     </>

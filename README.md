@@ -18,7 +18,15 @@ npm run dev        # http://localhost:3000
 ```sh
 npm run build      # static export -> out/
 npm run typecheck  # tsc --noEmit, no emit
+npm run qa         # headless-Chrome regression suite (see QA)
+npm run og         # re-render public/og.png from tools/og.html
 ```
+
+## Art direction
+
+[`docs/art-direction.md`](docs/art-direction.md) is the short version of why the
+site looks like this: two surfaces (cover + dated stream), the type scale, the
+colour rules, square corners, and the two moving parts.
 
 ## Deploy
 
@@ -56,6 +64,14 @@ src/
   vendor/           vendored Pretext build + hand-written .d.mts
 public/
   img/  audio/  og.png   # og.png is the 1200×630 link unfurl
+scripts/
+  og.mjs            render tools/og.html -> public/og.png
+  lib/chrome.mjs    locate a Chrome/Chromium binary
+  qa/               the regression suite (see QA)
+docs/
+  art-direction.md  the rules behind the look
+tools/
+  og.html           the link-unfurl card, in paper and ink
 ```
 
 ### Why there are only three client components
@@ -74,17 +90,22 @@ The trade-off is deliberate: React hydrates the page, but the markup you read in
 
 Almost everything lives in `src/lib/site.ts`.
 
-**A new log entry** — append to `entries`, newest first:
+**A new log entry** — append to `log` (anywhere; `entries` sorts it):
 
 ```ts
 {
-  date: "2026",
-  kind: "note",              // "work" | "note"
+  date: "2026",                // ISO "2026" or "2026-03"; a span uses `since`
+  since: "2024",               // optional, for "2024–26"
+  kind: "note",                // "work" | "note"
   title: "Something I noticed",
   summary: "One or two sentences.",
-  href: "https://…",         // optional; omit for entries that live only here
+  href: "https://…",           // optional; omit for entries that live only here
 }
 ```
+
+The stream sorts on `date` at module load, so it cannot drift out of order.
+Keep the granularity honest: a year when it was a year, a month when you know the
+month.
 
 **A new plate** — append to `plates`. Three shapes, each rendering differently:
 
@@ -125,38 +146,56 @@ gets a title and a sentence, the résumé gets the rest.
   keyboard — ever changes the theme.**
 - **Player** — a record deck in the lower-left corner. No autoplay: the disc
   only turns at 33⅓ once you press play. Spin the record to scrub, drag the card
-  anywhere (the position is remembered), mute from the header. The engine is
-  ported from Kokonut UI's `liquid-glass-card` (MIT), with the simulated clock
-  replaced by the real `<audio>` element.
+  anywhere (the position is remembered), set the level on the rail under the
+  transport or mute from the header — both are remembered. The engine is ported
+  from Kokonut UI's `liquid-glass-card` (MIT), with the simulated clock replaced
+  by the real `<audio>` element.
 - **Corners** — everything is square with 1px rules, the player included. The
   one round thing on the site is the record itself.
 
 ### Placeholder audio
 
 `public/audio/lofi-001.mp3` and `lofi-002.mp3` are stand-ins. Replace them with
-properly licensed tracks (and update the `artist` fields in
-`src/lib/site.ts`) before publishing.
+properly licensed tracks (and update the `artist` fields in `src/lib/site.ts`)
+before publishing.
+
+### Link unfurl
+
+`public/og.png` is a 1200×630 card rendered from `tools/og.html` — the same paper
+and ink as the page. After a token change, `npm run og` and commit the result.
 
 ## QA
 
-`npm run build`, serve `out/`, then open the page with `?qa=1`. The `qa` script
-appends a hidden `<pre id="qa-output">` holding a JSON report: horizontal
-overflow, hero font size, nav / player / pull-cord rects, the theme and the
-cord's checked state, how many reveals have fired, the playing state, dither
-count and layer, split-heading count, Pretext state, font status, image load
-state, and any uncaught errors. Read it with:
+```sh
+npm run qa                 # build if out/ is missing, then run everything
+npm run qa -- --build      # force a rebuild first
+npm run qa -- keys         # one suite: layout | contrast | motion | keys
+```
+
+Node builtins only: `scripts/qa/lib.mjs` serves `out/` (with HTTP Range, which the
+player needs to seek), launches headless Chrome and drives it over the DevTools
+protocol. Nothing to install, no Playwright.
+
+| suite | what it holds down |
+| --- | --- |
+| `layout` | no horizontal overflow at 1440/1280/768/390, reveals firing, cord and player on screen and not overlapping, the cord flipping the theme, the body following, reduced motion leaving the disc and the particle field still, the phone nav opening and closing |
+| `contrast` | WCAG AA on **every** rendered text node, in both themes, on `/` and `/cv/` — the audit walks the DOM, so a restructure cannot silently turn it into a no-op |
+| `motion` | the idle tug never changes the theme in 16 s, a real pull still does, and both `requestAnimationFrame` loops return to zero |
+| `keys` | the seek and volume sliders by keyboard, `End`/`Home`, the tab order reaching the cord and the transport, and the scroll spy setting *and clearing* |
+
+Headless Chrome reports `prefers-reduced-motion: reduce` unless told otherwise, so
+every suite sets the media feature explicitly.
+
+The in-page audit is still there for a quick look — open the page with `?qa=1` and
+read the hidden `<pre id="qa-output">`:
 
 ```js
 JSON.parse(document.getElementById("qa-output").textContent)
 ```
 
-Two things to know when reading the report:
-
-- Images are `loading="lazy"`, so anything below the fold reads as not loaded
-  until you scroll to it. The report runs 1.5 s after load without scrolling.
-- Seeking in the player only works against a server that honours HTTP Range
-  requests. `python3 -m http.server` does not, so the seek bar will appear dead
-  when testing that way; GitHub Pages and any Node static server do.
+Two things to know when reading it: images are `loading="lazy"`, so anything
+below the fold reads as not loaded until you scroll; and seeking only works
+against a server that honours Range, which `python3 -m http.server` does not.
 
 Verified at 1440, 1280, 768 and 390 px wide, in Chrome with and without
 `prefers-reduced-motion`, in both themes: no horizontal overflow, no console

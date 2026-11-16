@@ -1,5 +1,5 @@
 import { cx, reveal, section } from "@/lib/classes";
-import { entries } from "@/lib/site";
+import { entries, formatDate } from "@/lib/site";
 
 const row =
   "group grid grid-cols-1 items-baseline gap-x-[clamp(1rem,3vw,2.5rem)] gap-y-[0.35rem] border-b border-rule py-[clamp(1.2rem,2.8vh,1.8rem)] transition-[padding-left] duration-[300ms] hover:pl-[0.7rem] xs:grid-cols-[92px_minmax(0,1fr)] tb:grid-cols-[110px_minmax(0,1fr)_auto]";
@@ -32,7 +32,7 @@ export default function Stream() {
                   className={cx(row, entry.href ? "group" : "cursor-default")}
                 >
                   <span className="font-mono text-[0.66rem] tracking-[0.05em] text-muted transition-colors duration-[250ms] group-hover:text-accent">
-                    {entry.date}
+                    {formatDate(entry)}
                   </span>
 
                   <span className="min-w-0">

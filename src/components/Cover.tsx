@@ -44,7 +44,7 @@ export default function Cover() {
 
             <span className="inline-flex items-center gap-[0.55rem] font-mono text-[0.66rem] tracking-[0.08em] text-muted">
               <span className="size-[6px] rounded-full bg-accent animate-dot" />
-              Updated 2026
+              Updated {site.year}
             </span>
           </div>
         </div>
