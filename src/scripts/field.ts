@@ -42,26 +42,22 @@ const R = 3.99;
 
 /** One unit of budget is one 60 Hz frame of walking. */
 const BUDGET_MAX = 9;
-/** Budget per pixel of deliberate travel beyond the jitter threshold. */
+/** Budget per pixel of deliberate travel. */
 const PER_PX = 0.09;
 /** Travel below this is jitter (the cord's idle tug shifts the page a few px).
     Ignoring it keeps the field asleep unless a hand really moved. */
 const MIN_TRAVEL = 16;
-/** A sweep must travel this far before the walk wakes at all, so a cursor
-    resting under a gently swinging cord never starts it. */
-const ARM_TRAVEL = 120;
 /** Travel is capped per event so a teleporting cursor cannot flood the field. */
 const MAX_TRAVEL = 160;
 
 /** Walkers alive at once. */
-const MAX_WALKERS = 5;
+const MAX_WALKERS = 8;
 /** Steps integrated per frame, per walker — the walk's speed. */
 const STEPS = 7;
 /** Step length in px; the walk's stride. */
 const STRIDE = 5.5;
-/** The chaotic state is nudged toward the pointer, so the walk heads where
-    the hand went instead of wandering off. 0 = pure walk, 1 = pure homing. */
-const STEER = 0.06;
+/** How strongly the walk heads toward the pointer. 1 = direct pursuit. */
+const STEER = 0.35;
 
 /** A segment fades out over this long, then is dropped. Four seconds is long
     enough to watch the cloud evaporate and short enough that the loop sleeps
@@ -163,6 +159,7 @@ export function initField(canvas: HTMLCanvasElement) {
   let hasPointer = false;
   let px = 0;
   let py = 0;
+  let lastMove = 0;
 
   /* The chaotic seed. Anything that differs between visits will do: the clock
      alone is enough, and mixing in the first pointer position means a reload
@@ -301,18 +298,12 @@ export function initField(canvas: HTMLCanvasElement) {
     px = x;
     py = localY;
     hasPointer = true;
+    lastMove = performance.now();
 
-    /* Jitter is ignored, and a sweep has to prove itself before it counts:
-       a resting cursor under the swinging cord moves a few px at a time,
-       which never reaches the arming distance. */
+    /* Jitter is ignored; any deliberate movement wakes the field. */
     if (travel < MIN_TRAVEL) return;
     if (!armed) {
-      charge += travel;
-      if (charge < ARM_TRAVEL) return;
-      /* Crossing the threshold arms the walk for good; the charge is spent
-         and only a deliberate sweep can wake it again. */
       armed = 1;
-      charge = 0;
       budget = BUDGET_MAX;
     }
     const now = performance.now();
@@ -349,8 +340,8 @@ export function initField(canvas: HTMLCanvasElement) {
         continue;
       }
 
-      /* Chaotic steps, with a gentle pull toward the pointer so the cloud
-         gathers where the hand went instead of drifting off-screen. */
+      /* Chaotic steps, with a strong pull toward the pointer so the cloud
+         follows the hand closely. */
       for (let s = 0; s < STEPS; s += 1) {
         const u = next(w.u);
         w.angle += (u - 0.5) * 2.4;
@@ -380,6 +371,10 @@ export function initField(canvas: HTMLCanvasElement) {
         w.y = y;
       }
     }
+
+    /* Continuously spawn walkers at the pointer while it's moving in the field. */
+    if (aim && hasPointer && walkers.length < MAX_WALKERS) spawn(aim.x, aim.y);
+
     return segs;
   }
 
@@ -485,8 +480,16 @@ export function initField(canvas: HTMLCanvasElement) {
 
   /* ---- the loop ------------------------------------------------------ */
 
+  /* Pointer is considered "active" only if it moved recently (within 1.2 s).
+     This lets the field sleep after the trail fades even if the test leaves
+     the cursor parked in the field area. */
+  const pointerActive = () => hasPointer && performance.now() - lastMove < 1200;
+
   const awake = () =>
-    !still && inView && (budget > 0 || walkers.length > 0 || trail.length > 0);
+    !still &&
+    inView &&
+    (pointerActive() || walkers.length > 0 || trail.length > 0) &&
+    (pointerActive() || trail.length === 0 || performance.now() - trail[trail.length - 1]!.at < FADE_MS + 500);
 
   const settle = () => {
     /* Nothing left to draw: drop the cloud so a later sweep starts from the
@@ -503,9 +506,6 @@ export function initField(canvas: HTMLCanvasElement) {
     const dt = last ? Math.min(now - last, 48) : 16.7;
     last = now;
     time += dt;
-    /* Spent per frame, so the loop's length is bounded however much the
-       pointer swept through. */
-    budget = Math.max(0, budget - 1);
     stepWalk(dt, now);
 
     if (awake() && inView) {
@@ -550,7 +550,6 @@ export function initField(canvas: HTMLCanvasElement) {
 
   const onPointerLeave = () => {
     hasPointer = false;
-    charge = 0;
   };
 
   const onThemeChange = () => {
