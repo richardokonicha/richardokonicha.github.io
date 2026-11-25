@@ -73,8 +73,8 @@ export default function SpotifyEmbed() {
     window.setTimeout(() => { manualRef.current = false; }, 1500);
   };
 
-  const w = compact ? 220 : 300;
-  const h = compact ? 80 : 152;
+  const w = 280;
+  const h = 80;
   const style = { left: pos.x, top: pos.y };
 
   return (
