@@ -3,6 +3,7 @@ import { Fira_Code, Instrument_Serif, Inter } from "next/font/google";
 
 import Nav from "@/components/Nav";
 import PullCord from "@/components/PullCord";
+import SpotifyEmbed from "@/components/SpotifyEmbed";
 import SiteBehaviour from "@/components/SiteBehaviour";
 import SiteFooter from "@/components/SiteFooter";
 import { site } from "@/lib/site";
@@ -96,13 +97,7 @@ export default function RootLayout({
 
         <SiteFooter />
         <PullCord />
-        <iframe
-          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-          className="fixed bottom-4 left-4 z-[60] h-[152px] w-[300px] max-w-[calc(100vw-2rem)] rounded-none border-0"
-          loading="lazy"
-          src="https://open.spotify.com/embed/playlist/5yKBDNBJGJ51f6bCMnPuZN?utm_source=generator&theme=0"
-          title="Spotify playlist"
-        />
+        <SpotifyEmbed />
         <SiteBehaviour />
       </body>
     </html>
