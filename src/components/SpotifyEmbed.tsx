@@ -4,6 +4,8 @@ import * as React from "react";
 
 export default function SpotifyEmbed() {
   const [pos, setPos] = React.useState<{ x: number; y: number }>({ x: 16, y: 16 });
+  const [theme, setTheme] = React.useState<"0" | "1">("0");
+  const [compact, setCompact] = React.useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
   const dragRef = React.useRef<{ id: number; dx: number; dy: number } | null>(null);
   const manualRef = React.useRef(false);
@@ -19,15 +21,26 @@ export default function SpotifyEmbed() {
   };
 
   const bottomRight = () => {
+    const w = ref.current?.offsetWidth ?? 300;
     const h = ref.current?.offsetHeight ?? 152;
-    return clamp(window.innerWidth - (ref.current?.offsetWidth ?? 300) - 16, window.innerHeight - h - 16);
+    return clamp(window.innerWidth - w - 16, window.innerHeight - h - 16);
   };
   const topLeft = () => clamp(16, 16);
 
   React.useEffect(() => {
+    const syncTheme = () => setTheme(document.documentElement.dataset.theme === "dark" ? "0" : "1");
+    syncTheme();
+    const mo = new MutationObserver(syncTheme);
+    mo.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+    return () => mo.disconnect();
+  }, []);
+
+  React.useEffect(() => {
     const update = () => {
+      const isCompact = window.scrollY > 120;
+      setCompact(isCompact);
       if (manualRef.current) return;
-      setPos(window.scrollY > 120 ? topLeft() : bottomRight());
+      setPos(isCompact ? topLeft() : bottomRight());
     };
     update();
     window.addEventListener("scroll", update, { passive: true });
@@ -57,10 +70,11 @@ export default function SpotifyEmbed() {
     if (!d || d.id !== e.pointerId) return;
     dragRef.current = null;
     if (ref.current?.hasPointerCapture(e.pointerId)) ref.current.releasePointerCapture(e.pointerId);
-    // re-enable auto after a short delay
     window.setTimeout(() => { manualRef.current = false; }, 1500);
   };
 
+  const w = compact ? 220 : 300;
+  const h = compact ? 80 : 152;
   const style = { left: pos.x, top: pos.y };
 
   return (
@@ -70,16 +84,16 @@ export default function SpotifyEmbed() {
       onPointerMove={onMove}
       onPointerUp={onUp}
       onPointerCancel={onUp}
-      style={{ ...style, position: "fixed", zIndex: 60, cursor: "grab", touchAction: "none", transition: "left 0.3s ease, top 0.3s ease" }}
+      style={{ ...style, position: "fixed", zIndex: 60, cursor: "grab", touchAction: "none", transition: "left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease" }}
     >
       <iframe
         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-        height={152}
+        height={h}
         loading="lazy"
-        src="https://open.spotify.com/embed/playlist/5yKBDNBJGJ51f6bCMnPuZN?utm_source=generator&theme=0"
+        src={`https://open.spotify.com/embed/playlist/5yKBDNBJGJ51f6bCMnPuZN?utm_source=generator&theme=${theme}`}
         style={{ border: 0, display: "block" }}
         title="Spotify playlist"
-        width={300}
+        width={w}
       />
     </div>
   );

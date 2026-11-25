@@ -289,9 +289,9 @@ export default function PullCord() {
     document.addEventListener("visibilitychange", onVisible);
 
     grab.addEventListener("pointerdown", onDown);
-    grab.addEventListener("pointermove", onMove);
-    grab.addEventListener("pointerup", onUp);
-    grab.addEventListener("pointercancel", onUp);
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    window.addEventListener("pointercancel", onUp);
     grab.addEventListener("click", onClick);
 
     /* It tugs at itself now and then, so the invitation is not a mystery.
@@ -498,9 +498,9 @@ export default function PullCord() {
       window.removeEventListener("resize", onResize);
       document.removeEventListener("visibilitychange", onVisible);
       grab.removeEventListener("pointerdown", onDown);
-      grab.removeEventListener("pointermove", onMove);
-      grab.removeEventListener("pointerup", onUp);
-      grab.removeEventListener("pointercancel", onUp);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+      window.removeEventListener("pointercancel", onUp);
       grab.removeEventListener("click", onClick);
     };
   }, []);
@@ -566,7 +566,7 @@ export default function PullCord() {
   return (
     <div
       ref={wrapRef}
-      className="pointer-events-none fixed top-[4.6rem] right-[clamp(0.75rem,3vw,2rem)] z-[65] h-[260px] w-[140px] overflow-hidden bg-transparent max-md:top-[4.4rem] max-md:right-[0.75rem]"
+      className="pointer-events-none fixed top-[4.6rem] right-[clamp(0.75rem,3vw,2rem)] z-[65] h-[260px] w-[140px] overflow-visible bg-transparent max-md:top-[4.4rem] max-md:right-[0.75rem]"
     >
       {room(darkRoomRef, ROOMS.dark)}
       <div
