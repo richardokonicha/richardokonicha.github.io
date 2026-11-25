@@ -3,9 +3,10 @@
 import * as React from "react";
 
 export default function SpotifyEmbed() {
-  const [pos, setPos] = React.useState<{ x: number; y: number } | null>(null);
+  const [pos, setPos] = React.useState<{ x: number; y: number }>({ x: 16, y: 16 });
   const ref = React.useRef<HTMLDivElement>(null);
   const dragRef = React.useRef<{ id: number; dx: number; dy: number } | null>(null);
+  const manualRef = React.useRef(false);
 
   const clamp = (x: number, y: number) => {
     const w = ref.current?.offsetWidth ?? 300;
@@ -17,14 +18,24 @@ export default function SpotifyEmbed() {
     };
   };
 
+  const bottomRight = () => {
+    const h = ref.current?.offsetHeight ?? 152;
+    return clamp(window.innerWidth - (ref.current?.offsetWidth ?? 300) - 16, window.innerHeight - h - 16);
+  };
+  const topLeft = () => clamp(16, 16);
+
   React.useEffect(() => {
-    setPos(clamp(16, 16));
-    const onResize = () => {
-      const c = pos;
-      if (c) setPos(clamp(c.x, c.y));
+    const update = () => {
+      if (manualRef.current) return;
+      setPos(window.scrollY > 120 ? topLeft() : bottomRight());
     };
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    window.addEventListener("resize", update);
+    return () => {
+      window.removeEventListener("scroll", update);
+      window.removeEventListener("resize", update);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -32,6 +43,7 @@ export default function SpotifyEmbed() {
     if (e.button !== 0) return;
     const r = ref.current?.getBoundingClientRect();
     if (!r) return;
+    manualRef.current = true;
     dragRef.current = { id: e.pointerId, dx: e.clientX - r.left, dy: e.clientY - r.top };
     ref.current?.setPointerCapture(e.pointerId);
   };
@@ -45,9 +57,11 @@ export default function SpotifyEmbed() {
     if (!d || d.id !== e.pointerId) return;
     dragRef.current = null;
     if (ref.current?.hasPointerCapture(e.pointerId)) ref.current.releasePointerCapture(e.pointerId);
+    // re-enable auto after a short delay
+    window.setTimeout(() => { manualRef.current = false; }, 1500);
   };
 
-  const style = pos ? { left: pos.x, top: pos.y } : { left: 16, top: 16 };
+  const style = { left: pos.x, top: pos.y };
 
   return (
     <div
@@ -56,7 +70,7 @@ export default function SpotifyEmbed() {
       onPointerMove={onMove}
       onPointerUp={onUp}
       onPointerCancel={onUp}
-      style={{ ...style, position: "fixed", zIndex: 60, cursor: "grab", touchAction: "none" }}
+      style={{ ...style, position: "fixed", zIndex: 60, cursor: "grab", touchAction: "none", transition: "left 0.3s ease, top 0.3s ease" }}
     >
       <iframe
         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
