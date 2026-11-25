@@ -23,7 +23,7 @@ const row =
   "group grid grid-cols-1 items-baseline gap-x-[clamp(1rem,3vw,2.5rem)] gap-y-[0.35rem] border-b border-rule py-[clamp(1.2rem,2.8vh,1.8rem)] transition-[padding-left] duration-[300ms] hover:pl-[0.7rem] xs:grid-cols-[92px_minmax(0,1fr)] tb:grid-cols-[110px_minmax(0,1fr)_auto]";
 
 export default function Stream() {
-  const [year, setYear] = React.useState("All");
+  const [year, setYear] = React.useState("2026");
 
   const shown = React.useMemo(
     () =>

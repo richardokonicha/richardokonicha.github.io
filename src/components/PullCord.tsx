@@ -48,7 +48,7 @@ const ROOMS = {
   dark: {
     "--room-cord": "#8a8175",
     "--room-bead": "#f4f0e6",
-    "--room-shade": "#2a2620",
+    "--room-shade": "transparent",
     "--room-cap": "#4a443b",
     "--room-bulb": "#3b352c",
     "--room-glow": "0 0 0 0 rgb(232 163 61 / 0%)",
@@ -56,7 +56,7 @@ const ROOMS = {
   lit: {
     "--room-cord": "#8a8175",
     "--room-bead": "#14110e",
-    "--room-shade": "#e4dccd",
+    "--room-shade": "transparent",
     "--room-cap": "#c9bfa9",
     "--room-bulb": "#e8a33d",
     "--room-glow": "0 0 22px 6px rgb(232 163 61 / 40%)",
