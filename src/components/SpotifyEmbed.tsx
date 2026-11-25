@@ -84,7 +84,9 @@ export default function SpotifyEmbed() {
       onPointerMove={onMove}
       onPointerUp={onUp}
       onPointerCancel={onUp}
-      style={{ ...style, position: "fixed", zIndex: 60, cursor: "grab", touchAction: "none", transition: "left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease" }}
+      style={{ ...style, position: "fixed", zIndex: 60, cursor: "grab", touchAction: "none", transition: "left 0.3s ease, top 0.3s ease, width 0.3s ease, height 0.3s ease, opacity 0.3s ease", opacity: 0.55 }}
+      onMouseEnter={(e) => (e.currentTarget.style.opacity = "1")}
+      onMouseLeave={(e) => (e.currentTarget.style.opacity = "0.55")}
     >
       <iframe
         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
