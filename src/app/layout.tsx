@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Fira_Code, Instrument_Serif, Inter } from "next/font/google";
 
-import Nav from "@/components/Nav";
 import PullCord from "@/components/PullCord";
 import SpotifyEmbed from "@/components/SpotifyEmbed";
 import SiteBehaviour from "@/components/SiteBehaviour";
@@ -90,8 +89,6 @@ export default function RootLayout({
         >
           Skip to content
         </a>
-
-        <Nav />
 
         <main id="main">{children}</main>
 
