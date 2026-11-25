@@ -22,5 +22,5 @@ export default function SiteBehaviour() {
 
   /* Render a comment so Next.js doesn't optimise this client component away
      during static export. The comment has no visual impact. */
-  return <><!-- site-behaviour --></>;
+  return <>{/* site-behaviour */}</>;
 }
