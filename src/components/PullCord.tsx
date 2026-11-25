@@ -566,7 +566,7 @@ export default function PullCord() {
   return (
     <div
       ref={wrapRef}
-      className="pointer-events-none fixed top-[4.6rem] right-[clamp(0.75rem,3vw,2rem)] z-[65] h-[260px] w-[140px] overflow-visible bg-transparent max-md:top-[4.4rem] max-md:right-[0.75rem]"
+      className="pointer-events-none fixed top-[1rem] right-[clamp(0.75rem,3vw,2rem)] z-[65] h-[260px] w-[140px] overflow-visible bg-transparent max-md:top-[0.75rem] max-md:right-[0.75rem]"
     >
       {room(darkRoomRef, ROOMS.dark)}
       <div
