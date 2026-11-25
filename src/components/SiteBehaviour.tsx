@@ -20,7 +20,7 @@ export default function SiteBehaviour() {
     }
   }, []);
 
-  /* Render a comment so Next.js doesn't optimise this client component away
-     during static export. The comment has no visual impact. */
-  return <>{/* site-behaviour */}</>;
+  /* Render a hidden element so Next.js doesn't optimise this client component away
+     during static export. The element has no visual impact. */
+  return <span style={{ display: "none" }} data-site-behaviour="init" />;
 }
